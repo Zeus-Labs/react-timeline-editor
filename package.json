@@ -1,7 +1,7 @@
 {
-  "name": "@xzdarcy/react-timeline-editor",
+  "name": "@zeus-labs/react-timeline-editor",
   "version": "0.1.9",
-  "author": "xzdarcy",
+  "author": "Zeus Labs",
   "license": "MIT",
   "keywords": [
     "timeline",
