@@ -1,4 +1,4 @@
-import { Timeline } from '@xzdarcy/react-timeline-editor';
+import { Timeline } from '@zeus-labs/react-timeline-editor';
 import { cloneDeep } from 'lodash';
 import React, { useEffect, useState } from 'react';
 import './index.less';
@@ -11,13 +11,7 @@ const TimelineEditor = () => {
 
   return (
     <div className="timeline-editor-example0">
-      <Timeline
-        onChange={setData}
-        editorData={data}
-        effects={mockEffect}
-        hideCursor={false}
-        autoScroll={true}
-      />
+      <Timeline onChange={setData} editorData={data} effects={mockEffect} hideCursor={false} autoScroll={true} />
     </div>
   );
 };

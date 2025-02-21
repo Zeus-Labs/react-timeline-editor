@@ -1,5 +1,5 @@
-import { TimelineAction, TimelineRow } from "../interface/action";
-import { ADD_SCALE_COUNT } from "../interface/const";
+import { TimelineAction, TimelineRow } from '../interface/action';
+import { ADD_SCALE_COUNT } from '../interface/const';
 
 /** 时间转像素 */
 export function parserTimeToPixel(
@@ -8,7 +8,7 @@ export function parserTimeToPixel(
     startLeft: number;
     scale: number;
     scaleWidth: number;
-  }
+  },
 ) {
   const { startLeft, scale, scaleWidth } = param;
   return startLeft + (data / scale) * scaleWidth;
@@ -21,7 +21,7 @@ export function parserPixelToTime(
     startLeft: number;
     scale: number;
     scaleWidth: number;
-  }
+  },
 ) {
   const { startLeft, scale, scaleWidth } = param;
   return ((data - startLeft) / scaleWidth) * scale;
@@ -37,7 +37,7 @@ export function parserTransformToTime(
     startLeft: number;
     scale: number;
     scaleWidth: number;
-  }
+  },
 ) {
   const { left, width } = data;
   const start = parserPixelToTime(left, param);
@@ -58,7 +58,7 @@ export function parserTimeToTransform(
     startLeft: number;
     scale: number;
     scaleWidth: number;
-  }
+  },
 ) {
   const { start, end } = data;
   const left = parserTimeToPixel(start, param);
@@ -88,7 +88,7 @@ export function getScaleCountByPixel(
     startLeft: number;
     scaleWidth: number;
     scaleCount: number;
-  }
+  },
 ) {
   const { startLeft, scaleWidth } = param;
   const count = Math.ceil((data - startLeft) / scaleWidth);
@@ -102,7 +102,7 @@ export function parserActionsToPositions(
     startLeft: number;
     scale: number;
     scaleWidth: number;
-  }
+  },
 ) {
   const positions: number[] = [];
   actions.forEach((item) => {

@@ -70,7 +70,6 @@ toc: 'menu'
     </tr>
 </table>
 
-
 ## TimelineAction
 
 > 编辑器数据：动作数据结构
@@ -235,21 +234,21 @@ toc: 'menu'
     </tr>
 </table>
 
-### TimeLineEffectSource 
+### TimeLineEffectSource
 
 > 编辑器效果运行代码数据结构
 
-+ start 触发条件
-  + 运行器开始play时，如时间在当前action时间范围内触发
-+ enter 触发条件
-  + 从非action时间区域进入当前action时间区域
-+ update 触发条件
-  + 播放当前action时每帧触发（包括reRender）
-  + reRender时触发
-+ leave 触发条件
-  + 从当前action时间区域离开
-+ stop 触发条件
-  + 运行器pause时，如时间在当前action时间范围内触发
+- start 触发条件
+  - 运行器开始 play 时，如时间在当前 action 时间范围内触发
+- enter 触发条件
+  - 从非 action 时间区域进入当前 action 时间区域
+- update 触发条件
+  - 播放当前 action 时每帧触发（包括 reRender）
+  - reRender 时触发
+- leave 触发条件
+  - 从当前 action 时间区域离开
+- stop 触发条件
+  - 运行器 pause 时，如时间在当前 action 时间范围内触发
 
 <table>
   <thead>
@@ -367,7 +366,7 @@ toc: 'menu'
 
 ## TimelineState
 
-> timeline组件数据
+> timeline 组件数据
 
 <table>
   <thead>
@@ -471,6 +470,3 @@ toc: 'menu'
       </td>
     </tr>
 </table>
-
-
-

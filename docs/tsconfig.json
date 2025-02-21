@@ -8,8 +8,8 @@
     "baseUrl": "../",
     "strict": false,
     "paths": {
-      "@xzdarcy/react-timeline-editor": ["src/index.tsx"]
+      "@zeus-labs/react-timeline-editor": ["src/index.tsx"]
     },
     "allowSyntheticDefaultImports": true
-  },
+  }
 }

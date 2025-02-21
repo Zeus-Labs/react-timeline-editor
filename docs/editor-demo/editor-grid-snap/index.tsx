@@ -1,4 +1,4 @@
-import { Timeline } from '@xzdarcy/react-timeline-editor';
+import { Timeline } from '@zeus-labs/react-timeline-editor';
 import { Input, Row, Col, Switch } from 'antd';
 import { cloneDeep } from 'lodash';
 import React, { useState } from 'react';
@@ -32,14 +32,7 @@ const TimelineEditor = () => {
           </Col>
         </Row>
       </Input.Group>
-      <Timeline
-        scale={5}
-        onChange={setData}
-        editorData={data}
-        effects={mockEffect}
-        gridSnap={gridSnip}
-        scaleSplitCount={scaleSplitCount}
-      />
+      <Timeline scale={5} onChange={setData} editorData={data} effects={mockEffect} gridSnap={gridSnip} scaleSplitCount={scaleSplitCount} />
     </div>
   );
 };

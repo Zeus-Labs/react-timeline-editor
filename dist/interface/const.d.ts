@@ -1,4 +1,4 @@
-export declare const PREFIX = "timeline-editor";
+export declare const PREFIX = 'timeline-editor';
 /** 开始时光标所在时间 */
 export declare const START_CURSOR_TIME = 0;
 /** 默认刻度 */
@@ -21,6 +21,6 @@ export declare const MIN_SCALE_COUNT = 20;
 export declare const ADD_SCALE_COUNT = 5;
 /** 错误信息 */
 export declare const ERROR: {
-    START_TIME_LESS_THEN_ZERO: string;
-    END_TIME_LESS_THEN_START_TIME: string;
+  START_TIME_LESS_THEN_ZERO: string;
+  END_TIME_LESS_THEN_START_TIME: string;
 };

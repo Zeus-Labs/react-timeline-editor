@@ -2,7 +2,7 @@
 title: 基本使用
 toc: 'menu'
 order: 0
-group: 
+group:
   title: 编辑器示例
 ---
 

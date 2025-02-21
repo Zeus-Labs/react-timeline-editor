@@ -5,7 +5,7 @@ export enum LogLevel {
   WARN = 3,
   ERROR = 4,
   FATAL = 5,
-  SILENT = Infinity
+  SILENT = Infinity,
 }
 
 export const LogLevels = {
@@ -51,16 +51,16 @@ export default class ConsoleLogger {
 
   static setLevel(level: LogLevel) {
     this.level = level;
-    this.instances.forEach(logger => logger.setLevel(level));
+    this.instances.forEach((logger) => logger.setLevel(level));
   }
   static enable(level?: LogLevel) {
     if (level) {
       this.level = level;
     }
-    this.instances.forEach(logger => logger.enable());
+    this.instances.forEach((logger) => logger.enable());
   }
   static disable() {
-    this.instances.forEach(logger => logger.disable());
+    this.instances.forEach((logger) => logger.disable());
   }
 
   /**
