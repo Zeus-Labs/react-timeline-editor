@@ -1,5 +1,5 @@
-import { TimelineAction, TimelineRow } from "../../../interface/action";
-import { DragLineData } from "../drag_lines";
+import { TimelineAction, TimelineRow } from '../../../interface/action';
+import { DragLineData } from '../drag_lines';
 export declare function useDragLine(): {
     initDragLine: (data: {
         movePositions?: number[];
@@ -25,7 +25,7 @@ export declare function useDragLine(): {
     defaultGetMovePosition: (data: {
         start: number;
         end: number;
-        dir?: "right" | "left";
+        dir?: 'right' | 'left';
         startLeft: number;
         scale: number;
         scaleWidth: number;

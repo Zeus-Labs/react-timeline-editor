@@ -1,4 +1,4 @@
-import { TimelineAction, TimelineRow } from "../interface/action";
+import { TimelineAction, TimelineRow } from '../interface/action';
 /** 时间转像素 */
 export declare function parserTimeToPixel(data: number, param: {
     startLeft: number;

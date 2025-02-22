@@ -8,7 +8,7 @@ type EventData = {
 export type RndDragStartCallback = () => void;
 export type RndDragCallback = (data: EventData, scrollDelta?: number) => boolean | void;
 export type RndDragEndCallback = (data: Pick<EventData, 'left' | 'width'>) => void;
-export type Direction = "left" | "right";
+export type Direction = 'left' | 'right';
 export type RndResizeStartCallback = (dir: Direction) => void;
 export type RndResizeCallback = (dir: Direction, data: EventData) => boolean | void;
 export type RndResizeEndCallback = (dir: Direction, data: Pick<EventData, 'left' | 'width'>) => void;

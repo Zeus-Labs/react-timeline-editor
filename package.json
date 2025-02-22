@@ -11,12 +11,12 @@
     "typescript"
   ],
   "bugs": {
-    "url": "https://github.com/xzdarcy/react-timeline-editor/issues"
+    "url": "https://github.com/zeus-labs/react-timeline-editor/issues"
   },
-  "homepage": "https://github.com/xzdarcy/react-timeline-editor#readme",
+  "homepage": "https://github.com/zeus-labs/react-timeline-editor#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xzdarcy/react-timeline-editor.git"
+    "url": "git+https://github.com/zeus-labs/react-timeline-editor.git"
   },
   "scripts": {
     "start": "dumi dev",
@@ -24,6 +24,7 @@
     "docs:deploy": "",
     "build": "father-build",
     "deploy": "npm run docs:build && npm run docs:deploy",
+    "format": "prettier --write .",
     "prepublishOnly": "npm run build"
   },
   "files": [

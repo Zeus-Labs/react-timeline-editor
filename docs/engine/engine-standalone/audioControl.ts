@@ -1,4 +1,4 @@
-import { TimelineEngine } from '@xzdarcy/react-timeline-editor';
+import { TimelineEngine } from '@zeus-labs/react-timeline-editor';
 import { Howl } from 'howler';
 
 class AudioControl {

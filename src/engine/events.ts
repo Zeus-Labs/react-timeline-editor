@@ -1,4 +1,4 @@
-import { TimelineEngine } from "./engine";
+import { TimelineEngine } from './engine';
 
 export class Events {
   handlers = {};

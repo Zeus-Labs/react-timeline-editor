@@ -1,31 +1,27 @@
-@import "~antd/dist/antd.css";
-
+@import '~antd/dist/antd.css';
 
 @color-audio: #cd9541;
 @color-text-basic: #fff;
 @fontsize-small: 10px;
 @border-radius: 4px;
 
-
 .timeline-editor-example8 {
-
   .timeline-editor {
     width: 100%;
     max-width: 800px;
     height: 300px;
-  
+
     &-action {
       height: 28px !important;
       top: 50%;
       transform: translateY(-50%);
-    }  
+    }
 
     &-action {
-
       &-effect-effect0 {
         cursor: pointer;
         background-color: @color-audio;
-        background-image: url("/assets/soundWave.png");
+        background-image: url('/assets/soundWave.png');
         background-position: bottom;
         background-repeat: repeat-x;
         .effect0 {
@@ -37,7 +33,7 @@
           display: flex;
           flex-direction: row;
           align-items: center;
-    
+
           &-text {
             margin-left: 4px;
             flex: 1 1 auto;
@@ -50,9 +46,7 @@
             justify-content: center;
             overflow: hidden;
           }
-        
         }
-
 
         .timeline-editor-action-left-stretch,
         .timeline-editor-action-right-stretch {
@@ -61,9 +55,7 @@
           &::after {
             width: 18px;
             height: 18px;
-            transform: rotate(
-              45deg
-            ) scale(.8);
+            transform: rotate(45deg) scale(0.8);
             background: #aabbcc;
             border: none;
           }
@@ -72,12 +64,12 @@
         .timeline-editor-action-left-stretch::after {
           left: -9px;
         }
-    
+
         .timeline-editor-action-right-stretch::after {
           right: -9px;
         }
       }
-      
+
       .effect1 {
         width: 25px;
         height: 28px;

@@ -6,6 +6,6 @@ export default defineConfig({
   logo: '/assets/icon.png',
   outputPath: 'docs-dist',
   locales: [['zh-CN', '中文']],
-  styles: [`.__dumi-default-menu-header h1 {font-size: 24px}`]
+  styles: [`.__dumi-default-menu-header h1 {font-size: 24px}`],
   // more config: https://d.umijs.org/config
 });

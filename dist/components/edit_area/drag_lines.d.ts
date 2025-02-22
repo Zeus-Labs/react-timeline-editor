@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC } from 'react';
 import './drag_lines.less';
 export interface DragLineData {
     isMoving: boolean;

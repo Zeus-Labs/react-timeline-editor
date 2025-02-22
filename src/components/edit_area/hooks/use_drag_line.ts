@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { TimelineAction, TimelineRow } from "../../../interface/action";
-import { parserActionsToPositions, parserTimeToTransform } from "../../../utils/deal_data";
-import { DragLineData } from "../drag_lines";
+import { useState } from 'react';
+import { TimelineAction, TimelineRow } from '../../../interface/action';
+import { parserActionsToPositions, parserTimeToTransform } from '../../../utils/deal_data';
+import { DragLineData } from '../drag_lines';
 
 export function useDragLine() {
   const [dragLineData, setDragLineData] = useState<DragLineData>({ isMoving: false, movePositions: [], assistPositions: [] });
@@ -49,11 +49,11 @@ export function useDragLine() {
   };
 
   /** 获取当前移动标记 */
-  const defaultGetMovePosition = (data: { start: number; end: number; dir?: "right" | "left"; startLeft: number; scale: number; scaleWidth: number }) => {
+  const defaultGetMovePosition = (data: { start: number; end: number; dir?: 'right' | 'left'; startLeft: number; scale: number; scaleWidth: number }) => {
     const { start, end, dir, scale, scaleWidth, startLeft } = data;
     const { left, width } = parserTimeToTransform({ start, end }, { startLeft, scaleWidth, scale });
     if (!dir) return [left, left + width];
-    return dir === "right" ? [left + width] : [left];
+    return dir === 'right' ? [left + width] : [left];
   };
 
   /** 初始化draglines */

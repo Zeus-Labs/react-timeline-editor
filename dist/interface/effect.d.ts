@@ -1,5 +1,5 @@
-import { TimelineEngine } from "../engine/engine";
-import { TimelineAction } from "./action";
+import { TimelineEngine } from '../engine/engine';
+import { TimelineAction } from './action';
 export interface TimelineEffect {
     /** 效果id */
     id: string;

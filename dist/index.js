@@ -1620,7 +1620,7 @@ function styleInject(css, ref) {
   }
 }
 
-var css_248z = ".timeline-editor-cursor {\n  cursor: ew-resize;\n  position: absolute;\n  top: 32px;\n  height: calc(100% - 32px);\n  box-sizing: border-box;\n  border-left: 1px solid #5297FF;\n  border-right: 1px solid #5297FF;\n  transform: translateX(-25%) scaleX(0.5);\n}\n.timeline-editor-cursor-top {\n  position: absolute;\n  top: 0;\n  left: 50%;\n  transform: translate(-50%, 0) scaleX(2);\n  margin: auto;\n}\n.timeline-editor-cursor-area {\n  width: 16px;\n  height: 100%;\n  cursor: ew-resize;\n  position: absolute;\n  top: 0;\n  left: 50%;\n  transform: translateX(-50%);\n}\n";
+var css_248z = ".timeline-editor-cursor {\n  cursor: ew-resize;\n  position: absolute;\n  top: 32px;\n  height: calc(100% - 32px);\n  box-sizing: border-box;\n  border-left: 1px solid #5297ff;\n  border-right: 1px solid #5297ff;\n  transform: translateX(-25%) scaleX(0.5);\n}\n.timeline-editor-cursor-top {\n  position: absolute;\n  top: 0;\n  left: 50%;\n  transform: translate(-50%, 0) scaleX(2);\n  margin: auto;\n}\n.timeline-editor-cursor-area {\n  width: 16px;\n  height: 100%;\n  cursor: ew-resize;\n  position: absolute;\n  top: 0;\n  left: 50%;\n  transform: translateX(-50%);\n}\n";
 styleInject(css_248z);
 
 var Cursor = function Cursor(_ref) {
@@ -1753,7 +1753,7 @@ var DragLines = function DragLines(_ref) {
 var css_248z$2 = ".timeline-editor:hover .timeline-editor-edit-area .ReactVirtualized__Grid::-webkit-scrollbar {\n  height: 4px;\n}\n.timeline-editor-edit-area {\n  flex: 1 1 auto;\n  margin-top: 10px;\n  overflow: hidden;\n  position: relative;\n}\n.timeline-editor-edit-area .ReactVirtualized__Grid {\n  outline: none !important;\n  overflow: overlay !important;\n}\n.timeline-editor-edit-area .ReactVirtualized__Grid::-webkit-scrollbar {\n  width: 0;\n  height: 0;\n}\n.timeline-editor-edit-area .ReactVirtualized__Grid::-webkit-scrollbar-track {\n  background-color: transparent !important;\n}\n.timeline-editor-edit-area .ReactVirtualized__Grid::-webkit-scrollbar-thumb {\n  background: #313132;\n  border-radius: 16px;\n}\n";
 styleInject(css_248z$2);
 
-var css_248z$3 = ".timeline-editor-action {\n  position: absolute;\n  left: 0;\n  top: 0;\n  background-color: #2f3134;\n}\n.timeline-editor-action .timeline-editor-action-left-stretch,\n.timeline-editor-action .timeline-editor-action-right-stretch {\n  position: absolute;\n  top: 0;\n  width: 10px;\n  border-radius: 4px;\n  height: 100%;\n  overflow: hidden;\n}\n.timeline-editor-action .timeline-editor-action-left-stretch::after,\n.timeline-editor-action .timeline-editor-action-right-stretch::after {\n  position: absolute;\n  top: 0;\n  bottom: 0;\n  margin: auto;\n  border-radius: 4px;\n  border-top: 28px solid transparent;\n  border-bottom: 28px solid transparent;\n}\n.timeline-editor-action .timeline-editor-action-left-stretch {\n  left: 0;\n}\n.timeline-editor-action .timeline-editor-action-left-stretch::after {\n  left: 0;\n  content: \"\";\n  border-left: 7px solid rgba(255, 255, 255, 0.1);\n  border-right: 7px solid transparent;\n}\n.timeline-editor-action .timeline-editor-action-right-stretch {\n  right: 0;\n}\n.timeline-editor-action .timeline-editor-action-right-stretch::after {\n  right: 0;\n  content: \"\";\n  border-right: 7px solid rgba(255, 255, 255, 0.1);\n  border-left: 7px solid transparent;\n}\n";
+var css_248z$3 = ".timeline-editor-action {\n  position: absolute;\n  left: 0;\n  top: 0;\n  background-color: #2f3134;\n}\n.timeline-editor-action .timeline-editor-action-left-stretch,\n.timeline-editor-action .timeline-editor-action-right-stretch {\n  position: absolute;\n  top: 0;\n  width: 10px;\n  border-radius: 4px;\n  height: 100%;\n  overflow: hidden;\n}\n.timeline-editor-action .timeline-editor-action-left-stretch::after,\n.timeline-editor-action .timeline-editor-action-right-stretch::after {\n  position: absolute;\n  top: 0;\n  bottom: 0;\n  margin: auto;\n  border-radius: 4px;\n  border-top: 28px solid transparent;\n  border-bottom: 28px solid transparent;\n}\n.timeline-editor-action .timeline-editor-action-left-stretch {\n  left: 0;\n}\n.timeline-editor-action .timeline-editor-action-left-stretch::after {\n  left: 0;\n  content: '';\n  border-left: 7px solid rgba(255, 255, 255, 0.1);\n  border-right: 7px solid transparent;\n}\n.timeline-editor-action .timeline-editor-action-right-stretch {\n  right: 0;\n}\n.timeline-editor-action .timeline-editor-action-right-stretch::after {\n  right: 0;\n  content: '';\n  border-right: 7px solid rgba(255, 255, 255, 0.1);\n  border-left: 7px solid transparent;\n}\n";
 styleInject(css_248z$3);
 
 var EditAction = function EditAction(_ref) {
@@ -2222,7 +2222,7 @@ function useDragLine() {
       left = _parserTimeToTransfor.left,
       width = _parserTimeToTransfor.width;
     if (!dir) return [left, left + width];
-    return dir === "right" ? [left + width] : [left];
+    return dir === 'right' ? [left + width] : [left];
   };
   /** 初始化draglines */
   var initDragLine = function initDragLine(data) {
@@ -2442,7 +2442,7 @@ var EditArea = /*#__PURE__*/React__default['default'].forwardRef(function (props
   }, dragLineData)));
 });
 
-var css_248z$5 = ".timeline-editor {\n  height: 600px;\n  width: 600px;\n  min-height: 32px;\n  position: relative;\n  font-size: 12px;\n  font-family: \"PingFang SC\";\n  background-color: #191b1d;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n}\n";
+var css_248z$5 = ".timeline-editor {\n  height: 600px;\n  width: 600px;\n  min-height: 32px;\n  position: relative;\n  font-size: 12px;\n  font-family: 'PingFang SC';\n  background-color: #191b1d;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n}\n";
 styleInject(css_248z$5);
 
 var css_248z$6 = ".timeline-editor-time-area {\n  position: relative;\n  height: 32px;\n  flex: 0 0 auto;\n}\n.timeline-editor-time-area .ReactVirtualized__Grid {\n  outline: none;\n}\n.timeline-editor-time-area .ReactVirtualized__Grid::-webkit-scrollbar {\n  display: none;\n}\n.timeline-editor-time-area-interact {\n  position: absolute;\n  cursor: pointer;\n  left: 0;\n  top: 0;\n}\n.timeline-editor-time-unit {\n  border-right: 1px solid rgba(255, 255, 255, 0.2);\n  position: relative;\n  box-sizing: content-box;\n  height: 4px !important;\n  bottom: 0 !important;\n  top: auto !important;\n}\n.timeline-editor-time-unit-big {\n  height: 8px !important;\n}\n.timeline-editor-time-unit-scale {\n  color: rgba(255, 255, 255, 0.6);\n  position: absolute;\n  right: 0;\n  top: 0;\n  transform: translate(50%, -100%);\n}\n";

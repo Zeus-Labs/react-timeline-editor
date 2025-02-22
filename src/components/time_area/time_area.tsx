@@ -47,7 +47,7 @@ export const TimeArea: FC<TimeAreaProps> = ({ setCursor, maxScaleCount, hideCurs
         return showUnit ? scaleWidth / scaleSplitCount : scaleWidth;
     }
   };
-  const estColumnWidth=getColumnWidth({index:1});
+  const estColumnWidth = getColumnWidth({ index: 1 });
   return (
     <div className={prefix('time-area')}>
       <AutoSizer>

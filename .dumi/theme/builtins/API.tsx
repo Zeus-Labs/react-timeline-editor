@@ -34,9 +34,7 @@ const LOCALE_TEXTS = {
 export default ({ identifier, export: expt }: IApiComponentProps) => {
   const data = useApiData(identifier);
   const { locale } = useContext(context);
-  const texts = /^zh|cn$/i.test(locale)
-    ? LOCALE_TEXTS['zh-CN']
-    : LOCALE_TEXTS['en-US'];
+  const texts = /^zh|cn$/i.test(locale) ? LOCALE_TEXTS['zh-CN'] : LOCALE_TEXTS['en-US'];
 
   return (
     <>
@@ -66,13 +64,13 @@ export default ({ identifier, export: expt }: IApiComponentProps) => {
                           length += item.length;
                           return item;
                         } else {
-                          const key = keys.find(
-                            (key) => type.indexOf(key) === length,
-                          );
+                          const key = keys.find((key) => type.indexOf(key) === length);
                           if (key) {
                             type = type.replace(key, '');
                             return (
-                              <AnchorLink key={index} to={DataLink[key]}>{key}</AnchorLink>
+                              <AnchorLink key={index} to={DataLink[key]}>
+                                {key}
+                              </AnchorLink>
                             );
                           }
                         }
@@ -80,9 +78,7 @@ export default ({ identifier, export: expt }: IApiComponentProps) => {
                     </code>
                   </td>
                   <td>
-                    <code>
-                      {row.default || (row.required && texts.required) || '--'}
-                    </code>
+                    <code>{row.default || (row.required && texts.required) || '--'}</code>
                   </td>
                 </tr>
               );

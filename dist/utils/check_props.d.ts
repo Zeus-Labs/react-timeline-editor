@@ -1,2 +1,2 @@
-import { TimelineEditor } from "../interface/timeline";
+import { TimelineEditor } from '../interface/timeline';
 export declare function checkProps(props: TimelineEditor): TimelineEditor;

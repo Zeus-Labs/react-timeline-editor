@@ -1,4 +1,4 @@
-import { EditData } from "./timeline";
+import { EditData } from './timeline';
 /** 组件公共参数 */
 export interface CommonProp extends EditData {
     /** 刻度个数 */

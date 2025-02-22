@@ -4,7 +4,7 @@ class LottieControl {
   cacheMap: Record<string, AnimationItem> = {};
 
   private _goToAndStop(item: AnimationItem, time: number) {
-    if(!item.getDuration()) return;
+    if (!item.getDuration()) return;
     const duration = item.getDuration() * 1000;
     time = time * 1000;
     if (time > duration) time = time % duration;
@@ -51,7 +51,6 @@ class LottieControl {
     const item = this.cacheMap[id];
     if (!item) return;
     if (time > endTime || time < startTime) {
-
       item.hide();
     } else {
       const cur = time - startTime;

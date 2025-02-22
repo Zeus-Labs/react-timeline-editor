@@ -3,15 +3,13 @@ title: 介绍
 toc: 'menu'
 ---
 
-
 ## react timeline editor
 
-`react-timeline-editor` 是基于react开发的，用于快速搭建时间线编辑能力的组件。
+`react-timeline-editor` 是基于 react 开发的，用于快速搭建时间线编辑能力的组件。
 
 主要可用于构建动画编辑器、视频编辑器等。
 
 ![timeline](/assets/timeline.gif)
-
 
 ## ✨ 特性
 
@@ -24,23 +22,18 @@ toc: 'menu'
 ## 快速上手
 
 ```
-npm install @xzdarcy/react-timeline-editor
+npm install @zeus-labs/react-timeline-editor
 ```
 
 ```tsx | pure
 import React from 'react';
-import { Timeline } from '@xzdarcy/react-timeline-editor';
+import { Timeline } from '@zeus-labs/react-timeline-editor';
 
 export const TimelineEditor = () => {
-  return (
-    <Timeline     
-      editorData={[]}
-      effects={{}}
-    />
-  )
-}
+  return <Timeline editorData={[]} effects={{}} />;
+};
 ```
 
 ## Props
-<API hideTitle src="../src/components/timeline.tsx"></API>
 
+<API hideTitle src="../src/components/timeline.tsx"></API>

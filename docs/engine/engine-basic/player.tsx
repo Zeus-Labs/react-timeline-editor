@@ -1,5 +1,5 @@
 import { CaretRightOutlined, PauseOutlined } from '@ant-design/icons';
-import { TimelineState } from '@xzdarcy/react-timeline-editor';
+import { TimelineState } from '@zeus-labs/react-timeline-editor';
 import { Select } from 'antd';
 import React, { FC, useEffect, useState } from 'react';
 import lottieControl from './lottieControl';
@@ -27,7 +27,7 @@ const TimelinePlayer: FC<{
       if (autoScrollWhenPlay.current) {
         const autoScrollFrom = 500;
         const left = time * (scaleWidth / scale) + startLeft - autoScrollFrom;
-        timelineState.current.setScrollLeft(left)
+        timelineState.current.setScrollLeft(left);
       }
     });
 

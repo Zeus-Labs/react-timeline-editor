@@ -1,4 +1,4 @@
-import { Timeline } from '@xzdarcy/react-timeline-editor';
+import { Timeline } from '@zeus-labs/react-timeline-editor';
 import { cloneDeep } from 'lodash';
 import React, { useState } from 'react';
 import './index.less';
@@ -17,12 +17,12 @@ const TimelineEditor = () => {
         effects={mockEffect}
         hideCursor={false}
         getActionRender={(action) => {
-          if(action.id === 'action10') {
-            return <div className="prompt">只能拖拽左侧缩放</div>
+          if (action.id === 'action10') {
+            return <div className="prompt">只能拖拽左侧缩放</div>;
           }
         }}
-        onActionResizing={({action, dir}) => {
-          if(action.id === 'action10' && dir !== 'left') return false;
+        onActionResizing={({ action, dir }) => {
+          if (action.id === 'action10' && dir !== 'left') return false;
         }}
       />
     </div>

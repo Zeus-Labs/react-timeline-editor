@@ -1,4 +1,4 @@
-import { Timeline, TimelineAction } from '@xzdarcy/react-timeline-editor';
+import { Timeline, TimelineAction } from '@zeus-labs/react-timeline-editor';
 import { cloneDeep } from 'lodash';
 import React, { useRef, useState } from 'react';
 import './index.less';
@@ -8,7 +8,7 @@ const defaultEditorData = cloneDeep(mockData);
 
 const TimelineEditor = () => {
   const [data, setData] = useState(defaultEditorData);
-  const idRef = useRef(0)
+  const idRef = useRef(0);
 
   return (
     <div className="timeline-editor-example0">
@@ -17,18 +17,18 @@ const TimelineEditor = () => {
         editorData={data}
         effects={mockEffect}
         hideCursor={false}
-        onDoubleClickRow={(e, {row, time}) => {
+        onDoubleClickRow={(e, { row, time }) => {
           setData((pre) => {
-            const rowIndex = pre.findIndex(item => item.id === row.id);
+            const rowIndex = pre.findIndex((item) => item.id === row.id);
             const newAction: TimelineAction = {
               id: `action${idRef.current++}`,
               start: time,
               end: time + 0.5,
-              effectId: "effect0",
-            }
-            pre[rowIndex] = {...row, actions: row.actions.concat(newAction)};
+              effectId: 'effect0',
+            };
+            pre[rowIndex] = { ...row, actions: row.actions.concat(newAction) };
             return [...pre];
-          })
+          });
         }}
       />
     </div>

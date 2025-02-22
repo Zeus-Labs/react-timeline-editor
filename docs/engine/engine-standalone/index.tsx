@@ -1,5 +1,5 @@
 import { CaretRightOutlined, PauseOutlined } from '@ant-design/icons';
-import { TimelineEngine } from '@xzdarcy/react-timeline-editor';
+import { TimelineEngine } from '@zeus-labs/react-timeline-editor';
 import { Slider } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import './index.less';
@@ -22,11 +22,11 @@ const TimelineEditor = () => {
     timelineEngine.current.on('paused', () => setIsPlaying(false));
     timelineEngine.current.on('afterSetTime', ({ time }) => setTime(time));
     timelineEngine.current.on('setTimeByTick', ({ time }) => setTime(time));
-    
+
     let dur = 0;
-    mockData.forEach(row => {
-      row.actions.forEach(action => dur = Math.max(dur, action.end));
-    })
+    mockData.forEach((row) => {
+      row.actions.forEach((action) => (dur = Math.max(dur, action.end)));
+    });
     setDuration(dur);
 
     return () => {
@@ -50,7 +50,7 @@ const TimelineEditor = () => {
   const handleSetTime = (value: number) => {
     timelineEngine.current.setTime(Number(value));
     timelineEngine.current.reRender();
-  }
+  };
 
   // 时间展示
   const timeRender = (time: number) => {
