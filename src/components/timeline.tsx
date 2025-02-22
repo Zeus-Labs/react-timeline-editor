@@ -36,18 +36,18 @@ export const Timeline = React.forwardRef<TimelineState, TimelineEditor>((props, 
   const areaRef = useRef<HTMLDivElement>();
   const scrollSync = useRef<ScrollSync>();
 
-  // 编辑器数据
+  // Editor data
   const [editorData, setEditorData] = useState(data);
-  // scale数量
+  // Scale count
   const [scaleCount, setScaleCount] = useState(MIN_SCALE_COUNT);
-  // 光标距离
+  // Cursor time
   const [cursorTime, setCursorTime] = useState(START_CURSOR_TIME);
-  // 是否正在运行
+  // Is playing
   const [isPlaying, setIsPlaying] = useState(false);
-  // 当前时间轴宽度
+  // Current timeline width
   const [width, setWidth] = useState(Number.MAX_SAFE_INTEGER);
 
-  /** 监听数据变化 */
+  /** Listen for data changes */
   useLayoutEffect(() => {
     handleSetScaleCount(getScaleCountByRows(data, { scale }));
     setEditorData(data);
