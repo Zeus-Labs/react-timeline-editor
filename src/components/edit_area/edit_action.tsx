@@ -92,7 +92,7 @@ export const EditAction: FC<EditActionProps> = ({
   if (flexible) classNames.push('action-flexible');
   if (effects[effectId]) classNames.push(`action-effect-${effectId}`);
 
-  /** 计算scale count */
+  /** Calculate scale count */
   const handleScaleCount = (left: number, width: number) => {
     const curScaleCount = getScaleCountByPixel(left + width, {
       startLeft,
