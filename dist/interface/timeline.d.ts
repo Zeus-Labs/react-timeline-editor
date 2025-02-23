@@ -9,89 +9,89 @@ export * from './action';
 export * from './effect';
 export interface EditData {
     /**
-     * @description 时间轴编辑数据
+     * @description Timeline editing data
      */
     editorData: TimelineRow[];
     /**
-     * @description 时间轴动作效果map
+     * @description Timeline action effects map
      */
     effects: Record<string, TimelineEffect>;
     /**
-     * @description 单个刻度标记范畴（>0）
+     * @description Single scale mark category (>0)
      * @default 1
      */
     scale?: number;
     /**
-     * @description 最少刻度个数（>=1）
+     * @description Minimum number of scale marks (>=1)
      * @default 20
      */
     minScaleCount?: number;
     /**
-     * @description 最大刻度个数（>=minScaleCount）
+     * @description Maximum number of scale marks (>=minScaleCount)
      * @default Infinity
      */
     maxScaleCount?: number;
     /**
-     * @description 单个刻度细分单元数（>0整数）
+     * @description Number of subdivisions per scale mark (>0 integer)
      * @default 10
      */
     scaleSplitCount?: number;
     /**
-     * @description 单个刻度的显示宽度（>0, 单位：px）
+     * @description Display width of a single scale mark (>0, unit: px)
      * @default 160
      */
     scaleWidth?: number;
     /**
-     * @description 刻度开始距离左侧的距离（>=0, 单位：px）
+     * @description Distance from the left edge to the start of scale marks (>=0, unit: px)
      * @default 20
      */
     startLeft?: number;
     /**
-     * @description 每个编辑行默认高度（>0, 单位：px）
+     * @description Default height for each editing row (>0, unit: px)
      * @default 32
      */
     rowHeight?: number;
     /**
-     * @description 是否启动网格移动吸附
+     * @description Enable grid movement snapping
      * @default false
      */
     gridSnap?: boolean;
     /**
-     * @description 启动拖拽辅助线吸附
+     * @description Enable drag guide line snapping
      * @default false
      */
     dragLine?: boolean;
     /**
-     * @description 是否隐藏光标
+     * @description Hide cursor
      * @default false
      */
     hideCursor?: boolean;
     /**
-     * @description 禁止全部动作区域拖动
+     * @description Disable dragging for all action areas
      * @default false
      */
     disableDrag?: boolean;
     /**
-     * @description timeline运行器，不传则使用内置运行器
+     * @description Timeline engine, uses built-in engine if not provided
      */
     engine?: ITimelineEngine;
     /**
-     * @description 自定义action区域渲染
+     * @description Custom action area renderer
      */
     getActionRender?: (action: TimelineAction, row: TimelineRow) => ReactNode;
     /**
-     * @description 自定义scale渲染
+     * @description Custom scale renderer
      */
     getScaleRender?: (scale: number) => ReactNode;
     /**
-     * @description 开始移动回调
+     * @description Callback when action movement starts
      */
     onActionMoveStart?: (params: {
         action: TimelineAction;
         row: TimelineRow;
     }) => void;
     /**
-     * @description 移动回调（return false可阻止移动）
+     * @description Movement callback (return false to prevent movement)
      */
     onActionMoving?: (params: {
         action: TimelineAction;
@@ -100,7 +100,7 @@ export interface EditData {
         end: number;
     }) => void | boolean;
     /**
-     * @description 移动结束回调（return false可阻止onChange触发）
+     * @description Movement end callback (return false to prevent onChange trigger)
      */
     onActionMoveEnd?: (params: {
         action: TimelineAction;
@@ -109,7 +109,7 @@ export interface EditData {
         end: number;
     }) => void;
     /**
-     * @description 开始改变大小回调
+     * @description Callback when size change starts
      */
     onActionResizeStart?: (params: {
         action: TimelineAction;
@@ -117,7 +117,7 @@ export interface EditData {
         dir: 'right' | 'left';
     }) => void;
     /**
-     * @description 开始大小回调（return false可阻止改变）
+     * @description Size change callback (return false to prevent change)
      */
     onActionResizing?: (params: {
         action: TimelineAction;
@@ -127,7 +127,7 @@ export interface EditData {
         dir: 'right' | 'left';
     }) => void | boolean;
     /**
-     * @description 改变大小结束回调（return false可阻止onChange触发）
+     * @description Size change end callback (return false to prevent onChange trigger)
      */
     onActionResizeEnd?: (params: {
         action: TimelineAction;
@@ -137,14 +137,14 @@ export interface EditData {
         dir: 'right' | 'left';
     }) => void;
     /**
-     * @description 点击行回调
+     * @description Row click callback
      */
     onClickRow?: (e: React.MouseEvent<HTMLElement, MouseEvent>, param: {
         row: TimelineRow;
         time: number;
     }) => void;
     /**
-     * @description 点击动作回调
+     * @description Action click callback
      */
     onClickAction?: (e: React.MouseEvent<HTMLElement, MouseEvent>, param: {
         action: TimelineAction;
@@ -152,7 +152,7 @@ export interface EditData {
         time: number;
     }) => void;
     /**
-     * @description 点击动作回调（触发drag时不执行）
+     * @description Action click callback (not executed when drag is triggered)
      */
     onClickActionOnly?: (e: React.MouseEvent<HTMLElement, MouseEvent>, param: {
         action: TimelineAction;
@@ -160,14 +160,14 @@ export interface EditData {
         time: number;
     }) => void;
     /**
-     * @description 双击行回调
+     * @description Row double click callback
      */
     onDoubleClickRow?: (e: React.MouseEvent<HTMLElement, MouseEvent>, param: {
         row: TimelineRow;
         time: number;
     }) => void;
     /**
-     * @description 双击动作回调
+     * @description Action double click callback
      */
     onDoubleClickAction?: (e: React.MouseEvent<HTMLElement, MouseEvent>, param: {
         action: TimelineAction;
@@ -175,14 +175,14 @@ export interface EditData {
         time: number;
     }) => void;
     /**
-     * @description 右键行回调
+     * @description Row right click callback
      */
     onContextMenuRow?: (e: React.MouseEvent<HTMLElement, MouseEvent>, param: {
         row: TimelineRow;
         time: number;
     }) => void;
     /**
-     * @description 右键动作回调
+     * @description Action right click callback
      */
     onContextMenuAction?: (e: React.MouseEvent<HTMLElement, MouseEvent>, param: {
         action: TimelineAction;
@@ -190,7 +190,7 @@ export interface EditData {
         time: number;
     }) => void;
     /**
-     * @description 获取要提示辅助线的action id列表，在move/resize start 时进行计算，默认获取除当前移动action的全部
+     * @description Get list of action IDs for guide line hints, calculated at move/resize start, defaults to all actions except current
      */
     getAssistDragLineActionIds?: (params: {
         action: TimelineAction;
@@ -198,88 +198,83 @@ export interface EditData {
         row: TimelineRow;
     }) => string[];
     /**
-     * @description cursor开始拖拽事件
+     * @description Cursor drag start event
      */
     onCursorDragStart?: (time: number) => void;
     /**
-     * @description cursor结束拖拽事件
+     * @description Cursor drag end event
      */
     onCursorDragEnd?: (time: number) => void;
     /**
-     * @description cursor拖拽事件
+     * @description Cursor drag event
      */
     onCursorDrag?: (time: number) => void;
     /**
-     * @description 点击时间区域事件, 返回false时阻止设置时间
+     * @description Time area click event, return false to prevent time setting
      */
     onClickTimeArea?: (time: number, e: React.MouseEvent<HTMLDivElement, MouseEvent>) => boolean | undefined;
 }
 export interface TimelineState {
-    /** dom节点 */
+    /** DOM node */
     target: HTMLElement;
-    /** 运行监听器 */
+    /** Runtime listener */
     listener: Emitter<EventTypes>;
-    /** 是否正在播放 */
+    /** Whether currently playing */
     isPlaying: boolean;
-    /** 是否暂停中 */
+    /** Whether currently paused */
     isPaused: boolean;
-    /** 设置当前播放时间 */
+    /** Set current playback time */
     setTime: (time: number) => void;
-    /** 获取当前播放时间 */
+    /** Get current playback time */
     getTime: () => number;
-    /** 设置播放速率 */
+    /** Set playback rate */
     setPlayRate: (rate: number) => void;
-    /** 设置播放速率 */
+    /** Set playback rate */
     getPlayRate: () => number;
-    /** 重新渲染当前时间 */
+    /** Re-render current time */
     reRender: () => void;
-    /** 播放 */
+    /** Play */
     play: (param: {
-        /** 默认从头运行到尾, 优先级大于autoEnd */
+        /** Default runs from start to end, takes priority over autoEnd */
         toTime?: number;
-        /** 是否播放完后自动结束 */
+        /** Whether to automatically end after playback completes */
         autoEnd?: boolean;
-        /** 运行的actionId列表，不穿默认全部运行 */
+        /** List of action IDs to run, runs all if not provided */
         runActionIds?: string[];
     }) => boolean;
-    /** 暂停 */
+    /** Pause */
     pause: () => void;
-    /** 设置scroll left */
+    /** Set scroll left */
     setScrollLeft: (val: number) => void;
-    /** 设置scroll top */
+    /** Set scroll top */
     setScrollTop: (val: number) => void;
 }
-/**
- * 动画编辑器参数
- * @export
- * @interface TimelineProp
- */
 export interface TimelineEditor extends EditData {
     /**
-     * @description 编辑区域距离顶部滚动距离 (请使用ref.setScrollTop代替)
+     * @description Editor area scroll distance from top (please use ref.setScrollTop instead)
      * @deprecated
      */
     scrollTop?: number;
     /**
-     * @description 编辑区域滚动回调 (用于控制与编辑行滚动同步)
+     * @description Editor area scroll callback (used to control synchronization with editing row scrolling)
      */
     onScroll?: (params: OnScrollParams) => void;
     /**
-     * @description 拖拽时是否启动自动滚动
+     * @description Whether to enable auto-scrolling during drag
      * @default false
      */
     autoScroll?: boolean;
     /**
-     * @description 自定义timeline样式
+     * @description Custom timeline styles
      */
     style?: React.CSSProperties;
     /**
-     * @description 是否自动重新渲染（当数据改变或光标时间改变时update tick）
+     * @description Whether to auto re-render (update tick when data changes or cursor time changes)
      * @default true
      */
     autoReRender?: boolean;
     /**
-     * @description 数据改变回调，会在操作动作end改变数据后触发(返回false会阻止自动engine同步，用于减少性能开销)
+     * @description Data change callback, triggered after action end changes data (returning false prevents automatic engine sync to reduce performance overhead)
      */
     onChange?: (editorData: TimelineRow[]) => void | boolean;
 }

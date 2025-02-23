@@ -1272,7 +1272,7 @@ var RowDnd = /*#__PURE__*/React__default['default'].forwardRef(function (_ref, r
       interactable.current && interactable.current.unset();
     };
   }, []);
-  //#region [rgba(100,120,156,0.08)] 赋值相关api
+  //#region [rgba(100,120,156,0.08)] Assignment related API
   React.useImperativeHandle(ref, function () {
     return {
       updateLeft: function updateLeft(left) {
@@ -1323,7 +1323,7 @@ var RowDnd = /*#__PURE__*/React__default['default'].forwardRef(function (_ref, r
     return parseFloat((target === null || target === void 0 ? void 0 : (_target$dataset2 = target.dataset) === null || _target$dataset2 === void 0 ? void 0 : _target$dataset2.width) || '0');
   };
   //#endregion
-  //#region [rgba(188,188,120,0.05)] 回调api
+  //#region [rgba(188,188,120,0.05)] Callback API
   var handleMoveStart = function handleMoveStart(e) {
     deltaX.current = 0;
     isAdsorption.current = false;
@@ -1338,7 +1338,7 @@ var RowDnd = /*#__PURE__*/React__default['default'].forwardRef(function (_ref, r
     if (Math.abs(deltaX.current) >= distance) {
       var count = parseInt(deltaX.current / distance + '');
       var curLeft = preLeft + count * distance;
-      // 控制吸附
+      // Control adsorption
       var adsorption = curLeft;
       var minDis = Number.MAX_SAFE_INTEGER;
       adsorptionPositions.forEach(function (item) {
@@ -1348,18 +1348,18 @@ var RowDnd = /*#__PURE__*/React__default['default'].forwardRef(function (_ref, r
         if (dis2 < adsorptionDistance && dis2 < minDis) adsorption = item - preWidth;
       });
       if (adsorption !== curLeft) {
-        // 采用吸附数据
+        // Use adsorption data
         isAdsorption.current = true;
         curLeft = adsorption;
       } else {
-        // 控制网格
+        // Control grid
         if ((curLeft - start) % grid !== 0) {
           curLeft = start + grid * Math.round((curLeft - start) / grid);
         }
         isAdsorption.current = false;
       }
       deltaX.current = deltaX.current % distance;
-      // 控制bounds
+      // Control bounds
       if (curLeft < bounds.left) curLeft = bounds.left;else if (curLeft + preWidth > bounds.right) curLeft = bounds.right - preWidth;
       if (onDrag) {
         var ret = onDrag({
@@ -1430,11 +1430,11 @@ var RowDnd = /*#__PURE__*/React__default['default'].forwardRef(function (_ref, r
       preLeft = param.preLeft;
     var distance = isAdsorption.current ? adsorptionDistance : grid;
     if (dir === 'left') {
-      // 拖动左侧
+      // Drag left side
       if (Math.abs(deltaX.current) >= distance) {
         var count = parseInt(deltaX.current / distance + '');
         var curLeft = preLeft + count * distance;
-        // 控制吸附
+        // Control adsorption
         var adsorption = curLeft;
         var minDis = Number.MAX_SAFE_INTEGER;
         adsorptionPositions.forEach(function (item) {
@@ -1442,11 +1442,11 @@ var RowDnd = /*#__PURE__*/React__default['default'].forwardRef(function (_ref, r
           if (dis < adsorptionDistance && dis < minDis) adsorption = item;
         });
         if (adsorption !== curLeft) {
-          // 采用吸附数据
+          // Use adsorption data
           isAdsorption.current = true;
           curLeft = adsorption;
         } else {
-          // 控制grid网格
+          // Control grid
           if ((curLeft - start) % grid !== 0) {
             curLeft = start + grid * Math.round((curLeft - start) / grid);
           }
@@ -1470,7 +1470,7 @@ var RowDnd = /*#__PURE__*/React__default['default'].forwardRef(function (_ref, r
         handleUpdateWidth(curWidth, false);
       }
     } else if (dir === 'right') {
-      // 拖动右侧
+      // Drag right side
       if (Math.abs(deltaX.current) >= distance) {
         var _count = parseInt(deltaX.current / grid + '');
         var _curWidth = preWidth + _count * grid;
@@ -1800,20 +1800,20 @@ var EditAction = function EditAction(_ref) {
     _action$movable = action.movable,
     movable = _action$movable === void 0 ? true : _action$movable,
     effectId = action.effectId;
-  // 获取最大/最小 像素范围
+  // Get max/min pixel range
   var leftLimit = parserTimeToPixel(minStart || 0, {
     startLeft: startLeft,
     scale: scale,
     scaleWidth: scaleWidth
   });
   var rightLimit = Math.min(maxScaleCount * scaleWidth + startLeft,
-  // 根据maxScaleCount限制移动范围
+  // Limit movement range based on maxScaleCount
   parserTimeToPixel(maxEnd || Number.MAX_VALUE, {
     startLeft: startLeft,
     scale: scale,
     scaleWidth: scaleWidth
   }));
-  // 初始化动作坐标数据
+  // Initialize action coordinate data
   var _useState = React.useState(function () {
       return parserTimeToTransform({
         start: start,
@@ -1837,15 +1837,15 @@ var EditAction = function EditAction(_ref) {
       scaleWidth: scaleWidth
     }));
   }, [end, start, startLeft, scaleWidth, scale]);
-  // 配置拖拽网格对其属性
+  // Configure drag grid alignment properties
   var gridSize = scaleWidth / scaleSplitCount;
-  // 动作的名称
+  // Action name
   var classNames = ['action'];
   if (movable) classNames.push('action-movable');
   if (selected) classNames.push('action-selected');
   if (flexible) classNames.push('action-flexible');
   if (effects[effectId]) classNames.push("action-effect-".concat(effectId));
-  /** 计算scale count */
+  /** Calculate scale count */
   var handleScaleCount = function handleScaleCount(left, width) {
     var curScaleCount = getScaleCountByPixel(left + width, {
       startLeft: startLeft,
@@ -1854,7 +1854,7 @@ var EditAction = function EditAction(_ref) {
     });
     if (curScaleCount !== scaleCount) setScaleCount(curScaleCount);
   };
-  //#region [rgba(100,120,156,0.08)] 回调
+  //#region [rgba(100,120,156,0.08)] callbacks
   var handleDragStart = function handleDragStart() {
     onActionMoveStart && onActionMoveStart({
       action: action,
@@ -1893,7 +1893,7 @@ var EditAction = function EditAction(_ref) {
   var handleDragEnd = function handleDragEnd(_ref3) {
     var left = _ref3.left,
       width = _ref3.width;
-    // 计算时间
+    // Calculate time
     var _parserTransformToTim2 = parserTransformToTime({
         left: left,
         width: width
@@ -1904,7 +1904,7 @@ var EditAction = function EditAction(_ref) {
       }),
       start = _parserTransformToTim2.start,
       end = _parserTransformToTim2.end;
-    // 设置数据
+    // Set data
     var rowItem = editorData.find(function (item) {
       return item.id === row.id;
     });
@@ -1914,7 +1914,7 @@ var EditAction = function EditAction(_ref) {
     action.start = start;
     action.end = end;
     setEditorData(editorData);
-    // 执行回调
+    // Execute callback
     if (onActionMoveEnd) onActionMoveEnd({
       action: action,
       row: row,
@@ -1962,7 +1962,7 @@ var EditAction = function EditAction(_ref) {
   var handleResizeEnd = function handleResizeEnd(dir, _ref5) {
     var left = _ref5.left,
       width = _ref5.width;
-    // 计算时间
+    // Calculate time
     var _parserTransformToTim4 = parserTransformToTime({
         left: left,
         width: width
@@ -1973,7 +1973,7 @@ var EditAction = function EditAction(_ref) {
       }),
       start = _parserTransformToTim4.start,
       end = _parserTransformToTim4.end;
-    // 设置数据
+    // Set data
     var rowItem = editorData.find(function (item) {
       return item.id === row.id;
     });
@@ -1983,7 +1983,7 @@ var EditAction = function EditAction(_ref) {
     action.start = start;
     action.end = end;
     setEditorData(editorData);
-    // 触发回调
+    // Trigger callback
     if (onActionResizeEnd) onActionResizeEnd({
       action: action,
       row: row,
@@ -2399,9 +2399,9 @@ var EditArea = /*#__PURE__*/React__default['default'].forwardRef(function (props
   }, /*#__PURE__*/React__default['default'].createElement(reactVirtualized.AutoSizer, null, function (_ref2) {
     var width = _ref2.width,
       height = _ref2.height;
-    // 获取全部高度
+    // Get total height
     var totalHeight = 0;
-    // 高度列表
+    // Height list
     var heights = editorData.map(function (row) {
       var itemHeight = row.rowHeight || _rowHeight;
       totalHeight += itemHeight;
@@ -2565,32 +2565,32 @@ var Timeline = /*#__PURE__*/React__default['default'].forwardRef(function (props
   var domRef = React.useRef();
   var areaRef = React.useRef();
   var scrollSync = React.useRef();
-  // 编辑器数据
+  // Editor data
   var _useState = React.useState(data),
     _useState2 = _slicedToArray(_useState, 2),
     editorData = _useState2[0],
     setEditorData = _useState2[1];
-  // scale数量
+  // Scale count
   var _useState3 = React.useState(MIN_SCALE_COUNT),
     _useState4 = _slicedToArray(_useState3, 2),
     scaleCount = _useState4[0],
     setScaleCount = _useState4[1];
-  // 光标距离
+  // Cursor time
   var _useState5 = React.useState(START_CURSOR_TIME),
     _useState6 = _slicedToArray(_useState5, 2),
     cursorTime = _useState6[0],
     setCursorTime = _useState6[1];
-  // 是否正在运行
+  // Is playing
   var _useState7 = React.useState(false),
     _useState8 = _slicedToArray(_useState7, 2),
     isPlaying = _useState8[0],
     setIsPlaying = _useState8[1];
-  // 当前时间轴宽度
+  // Current timeline width
   var _useState9 = React.useState(Number.MAX_SAFE_INTEGER),
     _useState10 = _slicedToArray(_useState9, 2),
     width = _useState10[0],
     setWidth = _useState10[1];
-  /** 监听数据变化 */
+  /** Listen for data changes */
   React.useLayoutEffect(function () {
     handleSetScaleCount(getScaleCountByRows(data, {
       scale: scale
