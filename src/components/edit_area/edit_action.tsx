@@ -58,14 +58,14 @@ export const EditAction: FC<EditActionProps> = ({
   const isDragWhenClick = useRef(false);
   const { id, maxEnd, minStart, end, start, selected, flexible = true, movable = true, effectId } = action;
 
-  // 获取最大/最小 像素范围
+  // Get max/min pixel range
   const leftLimit = parserTimeToPixel(minStart || 0, {
     startLeft,
     scale,
     scaleWidth,
   });
   const rightLimit = Math.min(
-    maxScaleCount * scaleWidth + startLeft, // 根据maxScaleCount限制移动范围
+    maxScaleCount * scaleWidth + startLeft, // Limit movement range based on maxScaleCount
     parserTimeToPixel(maxEnd || Number.MAX_VALUE, {
       startLeft,
       scale,
@@ -73,7 +73,7 @@ export const EditAction: FC<EditActionProps> = ({
     }),
   );
 
-  // 初始化动作坐标数据
+  // Initialize action coordinate data
   const [transform, setTransform] = useState(() => {
     return parserTimeToTransform({ start, end }, { startLeft, scale, scaleWidth });
   });
@@ -82,17 +82,17 @@ export const EditAction: FC<EditActionProps> = ({
     setTransform(parserTimeToTransform({ start, end }, { startLeft, scale, scaleWidth }));
   }, [end, start, startLeft, scaleWidth, scale]);
 
-  // 配置拖拽网格对其属性
+  // Configure drag grid alignment properties
   const gridSize = scaleWidth / scaleSplitCount;
 
-  // 动作的名称
+  // Action name
   const classNames = ['action'];
   if (movable) classNames.push('action-movable');
   if (selected) classNames.push('action-selected');
   if (flexible) classNames.push('action-flexible');
   if (effects[effectId]) classNames.push(`action-effect-${effectId}`);
 
-  /** 计算scale count */
+  /** Calculate scale count */
   const handleScaleCount = (left: number, width: number) => {
     const curScaleCount = getScaleCountByPixel(left + width, {
       startLeft,
@@ -102,7 +102,7 @@ export const EditAction: FC<EditActionProps> = ({
     if (curScaleCount !== scaleCount) setScaleCount(curScaleCount);
   };
 
-  //#region [rgba(100,120,156,0.08)] 回调
+  //#region [rgba(100,120,156,0.08)] callbacks
   const handleDragStart: RndDragStartCallback = () => {
     onActionMoveStart && onActionMoveStart({ action, row });
   };
@@ -119,17 +119,17 @@ export const EditAction: FC<EditActionProps> = ({
   };
 
   const handleDragEnd: RndDragEndCallback = ({ left, width }) => {
-    // 计算时间
+    // Calculate time
     const { start, end } = parserTransformToTime({ left, width }, { scaleWidth, scale, startLeft });
 
-    // 设置数据
+    // Set data
     const rowItem = editorData.find((item) => item.id === row.id);
     const action = rowItem.actions.find((item) => item.id === id);
     action.start = start;
     action.end = end;
     setEditorData(editorData);
 
-    // 执行回调
+    // Execute callback
     if (onActionMoveEnd) onActionMoveEnd({ action, row, start, end });
   };
 
@@ -149,17 +149,17 @@ export const EditAction: FC<EditActionProps> = ({
   };
 
   const handleResizeEnd: RndResizeEndCallback = (dir, { left, width }) => {
-    // 计算时间
+    // Calculate time
     const { start, end } = parserTransformToTime({ left, width }, { scaleWidth, scale, startLeft });
 
-    // 设置数据
+    // Set data
     const rowItem = editorData.find((item) => item.id === row.id);
     const action = rowItem.actions.find((item) => item.id === id);
     action.start = start;
     action.end = end;
     setEditorData(editorData);
 
-    // 触发回调
+    // Trigger callback
     if (onActionResizeEnd) onActionResizeEnd({ action, row, start, end, dir });
   };
   //#endregion

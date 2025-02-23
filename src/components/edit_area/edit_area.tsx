@@ -11,19 +11,19 @@ import { EditRow } from './edit_row';
 import { useDragLine } from './hooks/use_drag_line';
 
 export type EditAreaProps = CommonProp & {
-  /** 距离左侧滚动距离 */
+  /** Distance scrolled from the left */
   scrollLeft: number;
-  /** 距离顶部滚动距离 */
+  /** Distance scrolled from the top */
   scrollTop: number;
-  /** 滚动回调，用于同步滚动 */
+  /** Scroll callback for synchronizing scrolling */
   onScroll: (params: OnScrollParams) => void;
-  /** 设置编辑器数据 */
+  /** Set editor data */
   setEditorData: (params: TimelineRow[]) => void;
-  /** 设置scroll left */
+  /** Set scroll left */
   deltaScrollLeft: (scrollLeft: number) => void;
 };
 
-/** edit area ref数据 */
+/** Edit area ref data */
 export interface EditAreaState {
   domRef: React.MutableRefObject<HTMLDivElement>;
 }
@@ -156,9 +156,9 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
     <div ref={editAreaRef} className={prefix('edit-area')}>
       <AutoSizer>
         {({ width, height }) => {
-          // 获取全部高度
+          // Get total height
           let totalHeight = 0;
-          // 高度列表
+          // Height list
           const heights = editorData.map((row) => {
             const itemHeight = row.rowHeight || rowHeight;
             totalHeight += itemHeight;
