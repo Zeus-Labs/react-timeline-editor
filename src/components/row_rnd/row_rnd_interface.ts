@@ -28,6 +28,8 @@ export interface RowRndProps {
   left?: number;
   grid?: number;
   start?: number;
+  scale?: number;
+  scaleWidth?: number;
   bounds?: { left: number; right: number };
   edges?: { left: boolean | string; right: boolean | string };
 
@@ -37,7 +39,8 @@ export interface RowRndProps {
   onDragStart?: RndDragStartCallback;
   onDrag?: RndDragCallback;
   onDragEnd?: RndDragEndCallback;
-  // 同时传入parentRef和deltaScrollLeft时会启动自动滚动
+  onDragEndVertical?: (params: { left: number; top: number }) => void;
+  // Auto-scrolling is enabled when both parentRef and deltaScrollLeft are provided
   parentRef?: React.MutableRefObject<HTMLDivElement>;
   deltaScrollLeft?: (delta: number) => void;
 
@@ -45,6 +48,7 @@ export interface RowRndProps {
 
   enableResizing?: boolean;
   enableDragging?: boolean;
+  enableDragBetweenTracks?: boolean;
   adsorptionPositions?: number[];
   adsorptionDistance?: number;
 }

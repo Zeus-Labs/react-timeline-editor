@@ -3,7 +3,7 @@ import { TimelineAction, TimelineRow } from '../../interface/action';
 import { CommonProp } from '../../interface/common_prop';
 import { DEFAULT_ADSORPTION_DISTANCE, DEFAULT_MOVE_GRID } from '../../interface/const';
 import { prefix } from '../../utils/deal_class_prefix';
-import { getScaleCountByPixel, parserTimeToPixel, parserTimeToTransform, parserTransformToTime } from '../../utils/deal_data';
+import { getScaleCountByPixel, parserTimeToPixel, parserPixelToTime, parserTimeToTransform, parserTransformToTime } from '../../utils/deal_data';
 import { RowDnd } from '../row_rnd/row_rnd';
 import { RndDragCallback, RndDragEndCallback, RndDragStartCallback, RndResizeCallback, RndResizeEndCallback, RndResizeStartCallback, RowRndApi } from '../row_rnd/row_rnd_interface';
 import { DragLineData } from './drag_lines';
@@ -16,7 +16,8 @@ export type EditActionProps = CommonProp & {
   setEditorData: (params: TimelineRow[]) => void;
   handleTime: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => number;
   areaRef: React.MutableRefObject<HTMLDivElement>;
-  /** 设置scroll left */
+  enableDragBetweenTracks?: boolean;
+  /** Set scroll left */
   deltaScrollLeft?: (delta: number) => void;
 };
 
@@ -32,6 +33,7 @@ export const EditAction: FC<EditActionProps> = ({
   startLeft,
   gridSnap,
   disableDrag,
+  enableDragBetweenTracks = false,
 
   scaleCount,
   maxScaleCount,
@@ -133,6 +135,30 @@ export const EditAction: FC<EditActionProps> = ({
     if (onActionMoveEnd) onActionMoveEnd({ action, row, start, end });
   };
 
+  const handleDragEndVertical = ({ left, top }: { left: number; top: number }) => {
+    const rowIndex = Math.floor(top / rowHeight);
+    if (rowIndex >= 0 && rowIndex < editorData.length) {
+      const targetRow = editorData[rowIndex];
+      const newStart = parserPixelToTime(left, { startLeft, scale, scaleWidth });
+      const duration = action.end - action.start;
+      const newEnd = newStart + duration;
+
+      // Validate with onActionMoving
+      if (onActionMoving && onActionMoving({ action, row: targetRow, start: newStart, end: newEnd }) === false) {
+        return; // Movement disallowed
+      }
+
+      // Update editorData
+      const originalRow = editorData.find((r) => r.id === row.id);
+      originalRow.actions = originalRow.actions.filter((a) => a.id !== action.id);
+      targetRow.actions.push({ ...action, start: newStart, end: newEnd });
+      targetRow.actions.sort((a, b) => a.start - b.start);
+      setEditorData([...editorData]);
+
+      if (onActionMoveEnd) onActionMoveEnd({ action, row: targetRow, start: newStart, end: newEnd });
+    }
+  };
+
   const handleResizeStart: RndResizeStartCallback = (dir) => {
     onActionResizeStart && onActionResizeStart({ action, row, dir });
   };
@@ -204,6 +230,8 @@ export const EditAction: FC<EditActionProps> = ({
       onResize={handleResizing}
       onResizeEnd={handleResizeEnd}
       deltaScrollLeft={deltaScrollLeft}
+      enableDragBetweenTracks={enableDragBetweenTracks}
+      onDragEndVertical={handleDragEndVertical}
     >
       <div
         onMouseDown={() => {

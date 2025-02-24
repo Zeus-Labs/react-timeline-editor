@@ -11,7 +11,9 @@ const TimelineEditor = () => {
 
   return (
     <div className="timeline-editor-example0">
-      <Timeline onChange={setData} editorData={data} effects={mockEffect} hideCursor={false} autoScroll={true} />
+      <Timeline onChange={setData} editorData={data} effects={mockEffect} hideCursor={false} autoScroll={true}
+        enableDragBetweenTracks={true}
+      />
     </div>
   );
 };

@@ -5,6 +5,7 @@ import { DEFAULT_ADSORPTION_DISTANCE, DEFAULT_MOVE_GRID, DEFAULT_START_LEFT } fr
 import { useAutoScroll } from './hooks/useAutoScroll';
 import { InteractComp } from './interactable';
 import { Direction, RowRndApi, RowRndProps } from './row_rnd_interface';
+import { parserPixelToTime, parserTimeToPixel } from '../../utils/deal_data';
 
 export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
   (
@@ -13,6 +14,8 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
       edges,
       left,
       width,
+      scale,
+      scaleWidth,
 
       start = DEFAULT_START_LEFT,
       grid = DEFAULT_MOVE_GRID,
@@ -22,6 +25,7 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
       },
       enableResizing = true,
       enableDragging = true,
+      enableDragBetweenTracks = false,
       adsorptionDistance = DEFAULT_ADSORPTION_DISTANCE,
       adsorptionPositions = [],
       onResizeStart,
@@ -29,6 +33,7 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
       onResizeEnd,
       onDragStart,
       onDragEnd,
+      onDragEndVertical,
       onDrag,
       parentRef,
       deltaScrollLeft,
@@ -90,6 +95,11 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
       deltaX.current = 0;
       isAdsorption.current = false;
       initAutoScroll();
+      if (enableDragBetweenTracks) {
+        const target = e.target as HTMLElement;
+        target.style.position = 'fixed';
+        target.style.zIndex = '1000';
+      }
       onDragStart && onDragStart();
     };
 
@@ -147,35 +157,76 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
     const handleMove = (e: DragEvent) => {
       const target = e.target;
 
-      if (deltaScrollLeft && parentRef?.current) {
-        const result = dealDragAutoScroll(e, (delta) => {
-          deltaScrollLeft(delta);
+      if (!enableDragBetweenTracks) {
 
-          let { left, width } = target.dataset;
-          const preLeft = parseFloat(left);
-          const preWidth = parseFloat(width);
-          deltaX.current += delta;
-          move({ preLeft, preWidth, scrollDelta: delta });
-        });
-        if (!result) return;
+        if (deltaScrollLeft && parentRef?.current) {
+          const result = dealDragAutoScroll(e, (delta) => {
+            deltaScrollLeft(delta);
+
+            let { left, width } = target.dataset;
+            const preLeft = parseFloat(left);
+            const preWidth = parseFloat(width);
+            deltaX.current += delta;
+            move({ preLeft, preWidth, scrollDelta: delta });
+          });
+          if (!result) return;
+        }
+
+        let { left, width } = target.dataset;
+        const preLeft = parseFloat(left);
+        const preWidth = parseFloat(width);
+
+        deltaX.current += e.dx;
+        move({ preLeft, preWidth });
       }
 
-      let { left, width } = target.dataset;
-      const preLeft = parseFloat(left);
-      const preWidth = parseFloat(width);
-
-      deltaX.current += e.dx;
-      move({ preLeft, preWidth });
+      // If enableDragBetweenTracks is true, Interact.js handles movement freely
     };
 
     const handleMoveStop = (e: DragEvent) => {
       deltaX.current = 0;
       isAdsorption.current = false;
       stopAutoScroll();
+      const target = e.target as HTMLElement;
 
-      const target = e.target;
-      let { left, width } = target.dataset;
-      onDragEnd && onDragEnd({ left: parseFloat(left), width: parseFloat(width) });
+      if (enableDragBetweenTracks && onDragEndVertical) {
+        const rect = target.getBoundingClientRect();
+        const timelineRect = parentRef.current.getBoundingClientRect();
+        const relativeLeft = rect.left - timelineRect.left + parentRef.current.scrollLeft;
+        const relativeTop = rect.top - timelineRect.top + parentRef.current.scrollTop;
+
+        if (isNaN(relativeLeft) || isNaN(relativeTop)) {
+          console.error('Invalid relative positions:', { relativeLeft, relativeTop });
+          return;
+        }
+
+        // Snap left position to grid and adsorption
+        let snappedLeft = relativeLeft;
+        let minDis = Number.MAX_SAFE_INTEGER;
+        adsorptionPositions.forEach((item) => {
+          const dis = Math.abs(item - relativeLeft);
+          if (dis < adsorptionDistance && dis < minDis) {
+            snappedLeft = item;
+            minDis = dis;
+          }
+        });
+        if (minDis === Number.MAX_SAFE_INTEGER) {
+          const time = parserPixelToTime(relativeLeft, { startLeft: start, scale, scaleWidth });
+          const snappedTime = Math.round(time / grid) * grid;
+          snappedLeft = parserTimeToPixel(snappedTime, { startLeft: start, scale, scaleWidth });
+        }
+
+        onDragEndVertical({ left: snappedLeft, top: relativeTop });
+
+        // Reset styles
+        target.style.position = 'absolute';
+        target.style.zIndex = '';
+        target.style.left = '0px';
+        target.style.top = '0px';
+      } else {
+        const { left, width } = target.dataset;
+        onDragEnd && onDragEnd({ left: parseFloat(left), width: parseFloat(width) });
+      }
     };
 
     const handleResizeStart = (e: ResizeEvent) => {

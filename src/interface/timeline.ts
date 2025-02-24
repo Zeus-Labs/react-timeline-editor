@@ -62,6 +62,7 @@ export interface EditData {
    * @default false
    */
   dragLine?: boolean;
+  enableDragBetweenTracks?: boolean;
   /**
    * @description Hide cursor
    * @default false
