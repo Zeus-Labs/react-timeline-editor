@@ -76,7 +76,7 @@ export const Timeline = React.forwardRef<TimelineState, TimelineEditor>((props, 
     setScaleCount(data);
   };
 
-  /** 处理主动数据变化 */
+  /** Handle active data changes */
   const handleEditorDataChange = (editorData: TimelineRow[]) => {
     const result = onChange(editorData);
     if (result !== false) {

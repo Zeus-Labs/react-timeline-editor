@@ -29,19 +29,19 @@ export interface TimelineAction {
 }
 
 /**
- * 动作行基本参数
+ * Basic parameters for timeline row
  * @export
  * @interface TimelineRow
  */
 export interface TimelineRow {
-  /** 动作行id */
+  /** Row ID */
   id: string;
-  /** 行的动作列表 */
+  /** List of actions in the row */
   actions: TimelineAction[];
-  /** 自定义行高 */
+  /** Custom row height */
   rowHeight?: number;
-  /** 行是否选中 */
+  /** Whether the row is selected */
   selected?: boolean;
-  /** 行的扩展类名 */
+  /** Additional class names for the row */
   classNames?: string[];
 }
