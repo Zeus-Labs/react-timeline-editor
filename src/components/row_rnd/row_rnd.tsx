@@ -86,7 +86,7 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
     //#endregion
 
     //#region [rgba(188,188,120,0.05)] Callback API
-    const handleMoveStart = (e: DragEvent) => {
+    const handleMoveStart = (_: DragEvent) => {
       deltaX.current = 0;
       isAdsorption.current = false;
       initAutoScroll();
@@ -96,52 +96,54 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
     const move = (param: { preLeft: number; preWidth: number; scrollDelta?: number }) => {
       const { preLeft, preWidth, scrollDelta } = param;
       const distance = isAdsorption.current ? adsorptionDistance : grid;
-      if (Math.abs(deltaX.current) >= distance) {
-        const count = parseInt(deltaX.current / distance + '');
-        let curLeft = preLeft + count * distance;
 
-        // Control adsorption
-        let adsorption = curLeft;
-        let minDis = Number.MAX_SAFE_INTEGER;
-        adsorptionPositions.forEach((item) => {
-          const dis = Math.abs(item - curLeft);
-          if (dis < adsorptionDistance && dis < minDis) adsorption = item;
-          const dis2 = Math.abs(item - (curLeft + preWidth));
-          if (dis2 < adsorptionDistance && dis2 < minDis) adsorption = item - preWidth;
-        });
+      if (Math.abs(deltaX.current) < distance) return;
 
-        if (adsorption !== curLeft) {
-          // Use adsorption data
-          isAdsorption.current = true;
-          curLeft = adsorption;
-        } else {
-          // Control grid
-          if ((curLeft - start) % grid !== 0) {
-            curLeft = start + grid * Math.round((curLeft - start) / grid);
-          }
-          isAdsorption.current = false;
+      const count = parseInt(deltaX.current / distance + '');
+      let curLeft = preLeft + count * distance;
+
+      // Control adsorption
+      let adsorption = curLeft;
+      let minDis = Number.MAX_SAFE_INTEGER;
+      adsorptionPositions.forEach((item) => {
+        const dis = Math.abs(item - curLeft);
+        if (dis < adsorptionDistance && dis < minDis) adsorption = item;
+        const dis2 = Math.abs(item - (curLeft + preWidth));
+        if (dis2 < adsorptionDistance && dis2 < minDis) adsorption = item - preWidth;
+      });
+
+      if (adsorption !== curLeft) {
+        // Use adsorption data
+        isAdsorption.current = true;
+        curLeft = adsorption;
+      } else {
+        // Control grid
+        if ((curLeft - start) % grid !== 0) {
+          curLeft = start + grid * Math.round((curLeft - start) / grid);
         }
-        deltaX.current = deltaX.current % distance;
-
-        // Control bounds
-        if (curLeft < bounds.left) curLeft = bounds.left;
-        else if (curLeft + preWidth > bounds.right) curLeft = bounds.right - preWidth;
-
-        if (onDrag) {
-          const ret = onDrag(
-            {
-              lastLeft: preLeft,
-              left: curLeft,
-              lastWidth: preWidth,
-              width: preWidth,
-            },
-            scrollDelta,
-          );
-          if (ret === false) return;
-        }
-
-        handleUpdateLeft(curLeft, false);
+        isAdsorption.current = false;
       }
+      deltaX.current = deltaX.current % distance;
+
+      // Control bounds
+      if (curLeft < bounds.left) curLeft = bounds.left;
+      else if (curLeft + preWidth > bounds.right) curLeft = bounds.right - preWidth;
+
+      if (onDrag) {
+        const ret = onDrag(
+          {
+            lastLeft: preLeft,
+            left: curLeft,
+            lastWidth: preWidth,
+            width: preWidth,
+          },
+          scrollDelta,
+        );
+        if (ret === false) return;
+      }
+
+      handleUpdateLeft(curLeft, false);
+
     };
 
     const handleMove = (e: DragEvent) => {
