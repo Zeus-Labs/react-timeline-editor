@@ -21,7 +21,8 @@ export function useAutoScroll(target: React.MutableRefObject<HTMLDivElement>) {
   };
 
   const dealDragAutoScroll = (e: DragEvent, deltaScroll?: (delta: number) => void) => {
-    // 超出
+    // Exceeded bounds
+    // TODO: add vertical auto scroll
     if (e.clientX >= rightBoundRef.current || e.clientX <= leftBoundRef.current) {
       cancelAnimationFrame(frame.current);
       const over = Math.abs(e.clientX >= rightBoundRef.current ? e.clientX - rightBoundRef.current : e.clientX - leftBoundRef.current);

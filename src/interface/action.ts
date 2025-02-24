@@ -1,30 +1,30 @@
 /**
- * 动作的基本参数
+ * Basic parameters for actions
  * @export
  * @interface TimelineAction
  */
 export interface TimelineAction {
-  /** 动作id */
+  /** Action ID */
   id: string;
-  /** 动作开始时间 */
+  /** Action start time */
   start: number;
-  /** 动作结束时间 */
+  /** Action end time */
   end: number;
-  /** 动作所对应的effectId */
+  /** Effect ID corresponding to the action */
   effectId: string;
 
-  /** 动作是否被选中 */
+  /** Whether the action is selected */
   selected?: boolean;
-  /** 动作是否可伸缩 */
+  /** Whether the action can be resized */
   flexible?: boolean;
-  /** 动作是否可移动 */
+  /** Whether the action can be moved */
   movable?: boolean;
-  /** 动作是否禁止运行 */
+  /** Whether the action is disabled */
   disable?: boolean;
 
-  /** 动作最小开始时间限制 */
+  /** Minimum start time constraint for the action */
   minStart?: number;
-  /** 动作最大结束时间限制 */
+  /** Maximum end time constraint for the action */
   maxEnd?: number;
 }
 

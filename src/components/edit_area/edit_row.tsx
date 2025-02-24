@@ -20,18 +20,7 @@ export type EditRowProps = CommonProp & {
 };
 
 export const EditRow: FC<EditRowProps> = (props) => {
-  const {
-    rowData,
-    style = {},
-    onClickRow,
-    onDoubleClickRow,
-    onContextMenuRow,
-    areaRef,
-    scrollLeft,
-    startLeft,
-    scale,
-    scaleWidth,
-  } = props;
+  const { rowData, style = {}, onClickRow, onDoubleClickRow, onContextMenuRow, areaRef, scrollLeft, startLeft, scale, scaleWidth } = props;
 
   const classNames = ['edit-row'];
   if (rowData?.selected) classNames.push('edit-row-selected');

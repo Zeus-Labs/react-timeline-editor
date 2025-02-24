@@ -55,7 +55,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
   const gridRef = useRef<Grid>();
   const heightRef = useRef(-1);
 
-  // ref 数据
+  // ref data
   useImperativeHandle(ref, () => ({
     get domRef() {
       return editAreaRef;
@@ -99,9 +99,9 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
     }
   };
 
-  /** 获取每个cell渲染内容 */
+  /** Get the rendering content of each cell */
   const cellRenderer: GridCellRenderer = ({ rowIndex, key, style }) => {
-    const row = editorData[rowIndex]; // 行数据
+    const row = editorData[rowIndex]; // row data
     return (
       <EditRow
         {...props}
