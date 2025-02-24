@@ -16,7 +16,8 @@ export type EditActionProps = CommonProp & {
   setEditorData: (params: TimelineRow[]) => void;
   handleTime: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => number;
   areaRef: React.MutableRefObject<HTMLDivElement>;
-  /** 设置scroll left */
+  enableDragBetweenTracks?: boolean;
+  /** Set scroll left */
   deltaScrollLeft?: (delta: number) => void;
 };
 
@@ -32,6 +33,7 @@ export const EditAction: FC<EditActionProps> = ({
   startLeft,
   gridSnap,
   disableDrag,
+  enableDragBetweenTracks = false,
 
   scaleCount,
   maxScaleCount,
@@ -204,6 +206,7 @@ export const EditAction: FC<EditActionProps> = ({
       onResize={handleResizing}
       onResizeEnd={handleResizeEnd}
       deltaScrollLeft={deltaScrollLeft}
+      enableDragBetweenTracks={enableDragBetweenTracks}
     >
       <div
         onMouseDown={() => {

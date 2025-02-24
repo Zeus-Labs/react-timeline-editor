@@ -22,6 +22,7 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
       },
       enableResizing = true,
       enableDragging = true,
+      enableDragBetweenTracks = false,
       adsorptionDistance = DEFAULT_ADSORPTION_DISTANCE,
       adsorptionPositions = [],
       onResizeStart,
@@ -37,6 +38,7 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
   ) => {
     const interactable = useRef<Interactable>();
     const deltaX = useRef(0);
+    const deltaY = useRef(0);
     const isAdsorption = useRef(false);
     const { initAutoScroll, dealDragAutoScroll, dealResizeAutoScroll, stopAutoScroll } = useAutoScroll(parentRef);
 
@@ -49,8 +51,10 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
     //#region [rgba(100,120,156,0.08)] Assignment related API
     useImperativeHandle(ref, () => ({
       updateLeft: (left) => handleUpdateLeft(left || 0, false),
+      updateTop: (top) => handleUpdateTop(top || 0, false),
       updateWidth: (width) => handleUpdateWidth(width, false),
       getLeft: handleGetLeft,
+      getTop: handleGetTop,
       getWidth: handleGetWidth,
     }));
     useEffect(() => {
@@ -68,6 +72,12 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
       target.style.left = `${left}px`;
       Object.assign(target.dataset, { left });
     };
+    const handleUpdateTop = (top: number, reset = true) => {
+      if (!interactable.current || !interactable.current.target) return;
+      reset && (deltaY.current = 0);
+      const target = interactable.current.target as HTMLElement;
+      Object.assign(target.dataset, { top });
+    };
     const handleUpdateWidth = (width: number, reset = true) => {
       if (!interactable.current || !interactable.current.target) return;
       reset && (deltaX.current = 0);
@@ -75,9 +85,14 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
       target.style.width = `${width}px`;
       Object.assign(target.dataset, { width });
     };
+
     const handleGetLeft = () => {
       const target = interactable.current.target as HTMLElement;
       return parseFloat(target?.dataset?.left || '0');
+    };
+    const handleGetTop = () => {
+      const target = interactable.current.target as HTMLElement;
+      return parseFloat(target?.dataset?.top || '0');
     };
     const handleGetWidth = () => {
       const target = interactable.current.target as HTMLElement;
@@ -88,6 +103,7 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
     //#region [rgba(188,188,120,0.05)] Callback API
     const handleMoveStart = (_: DragEvent) => {
       deltaX.current = 0;
+      deltaY.current = 0;
       isAdsorption.current = false;
       initAutoScroll();
       onDragStart && onDragStart();
@@ -97,6 +113,7 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
       const { preLeft, preWidth, scrollDelta } = param;
       const distance = isAdsorption.current ? adsorptionDistance : grid;
 
+      // Only processes movement if the accumulated delta (stored in `deltaX.current`) exceeds the minimum distance
       if (Math.abs(deltaX.current) < distance) return;
 
       const count = parseInt(deltaX.current / distance + '');
@@ -136,6 +153,8 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
             left: curLeft,
             lastWidth: preWidth,
             width: preWidth,
+            top: 0,
+            lastTop: 0,
           },
           scrollDelta,
         );
@@ -143,7 +162,6 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
       }
 
       handleUpdateLeft(curLeft, false);
-
     };
 
     const handleMove = (e: DragEvent) => {
@@ -167,17 +185,20 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
       const preWidth = parseFloat(width);
 
       deltaX.current += e.dx;
+      deltaY.current += e.dy;
+
       move({ preLeft, preWidth });
     };
 
     const handleMoveStop = (e: DragEvent) => {
       deltaX.current = 0;
+      deltaY.current = 0;
       isAdsorption.current = false;
       stopAutoScroll();
 
       const target = e.target;
       let { left, width } = target.dataset;
-      onDragEnd && onDragEnd({ left: parseFloat(left), width: parseFloat(width) });
+      onDragEnd && onDragEnd({ left: parseFloat(left), width: parseFloat(width), top: 0 });
     };
 
     const handleResizeStart = (e: ResizeEvent) => {
@@ -331,7 +352,7 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
         draggable={enableDragging}
         resizable={enableResizing}
         draggableOptions={{
-          lockAxis: 'x',
+          lockAxis: enableDragBetweenTracks ? 'xy' : 'x',
           onmove: handleMove,
           onstart: handleMoveStart,
           onend: handleMoveStop,

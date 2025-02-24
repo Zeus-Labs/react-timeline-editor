@@ -7,9 +7,14 @@ type EventData = {
   width: number;
 };
 
+type EventDragData = EventData & {
+  top: number;
+  lastTop: number;
+};
+
 export type RndDragStartCallback = () => void;
-export type RndDragCallback = (data: EventData, scrollDelta?: number) => boolean | void;
-export type RndDragEndCallback = (data: Pick<EventData, 'left' | 'width'>) => void;
+export type RndDragCallback = (data: EventDragData, scrollDelta?: number) => boolean | void;
+export type RndDragEndCallback = (data: Pick<EventDragData, 'left' | 'width' | 'top'>) => void;
 
 export type Direction = 'left' | 'right';
 export type RndResizeStartCallback = (dir: Direction) => void;
@@ -19,7 +24,9 @@ export type RndResizeEndCallback = (dir: Direction, data: Pick<EventData, 'left'
 export interface RowRndApi {
   updateWidth: (size: number) => void;
   updateLeft: (left: number) => void;
+  updateTop: (top: number) => void;
   getLeft: () => number;
+  getTop: () => number;
   getWidth: () => number;
 }
 
@@ -37,7 +44,7 @@ export interface RowRndProps {
   onDragStart?: RndDragStartCallback;
   onDrag?: RndDragCallback;
   onDragEnd?: RndDragEndCallback;
-  // 同时传入parentRef和deltaScrollLeft时会启动自动滚动
+  // Auto-scrolling is enabled when both parentRef and deltaScrollLeft are provided
   parentRef?: React.MutableRefObject<HTMLDivElement>;
   deltaScrollLeft?: (delta: number) => void;
 
@@ -45,6 +52,7 @@ export interface RowRndProps {
 
   enableResizing?: boolean;
   enableDragging?: boolean;
+  enableDragBetweenTracks?: boolean;
   adsorptionPositions?: number[];
   adsorptionDistance?: number;
 }
