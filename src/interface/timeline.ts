@@ -63,6 +63,11 @@ export interface EditData {
    */
   dragLine?: boolean;
   /**
+   * @description Enable dragging actions between different tracks
+   * @default false
+   */
+  enableDragBetweenTracks?: boolean;
+  /**
    * @description Hide cursor
    * @default false
    */

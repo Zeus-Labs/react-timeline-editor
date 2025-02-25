@@ -2,15 +2,16 @@ import { DraggableOptions } from '@interactjs/actions/drag/plugin';
 import { ResizableOptions } from '@interactjs/actions/resize/plugin';
 import { DragEvent, Interactable } from '@interactjs/types';
 import interact from 'interactjs';
-import { cloneElement, FC, ReactElement, useEffect, useRef } from 'react';
+import { cloneElement, ReactElement, useEffect, useRef, forwardRef } from 'react';
 
-export const InteractComp: FC<{
+export const InteractComp = forwardRef<HTMLElement, {
   interactRef?: React.MutableRefObject<Interactable>;
   draggable: boolean;
   draggableOptions: DraggableOptions;
   resizable: boolean;
   resizableOptions: ResizableOptions;
-}> = ({ children, interactRef, draggable, resizable, draggableOptions, resizableOptions }) => {
+  children: ReactElement;
+}>(({ children, interactRef, draggable, resizable, draggableOptions, resizableOptions }, ref) => {
   const nodeRef = useRef<HTMLElement>();
   const interactable = useRef<Interactable>();
   const draggableOptionsRef = useRef<DraggableOptions>();
@@ -22,13 +23,21 @@ export const InteractComp: FC<{
   }, [draggableOptions, resizableOptions]);
 
   useEffect(() => {
+    if (!nodeRef.current) return;
+    
     interactable.current && interactable.current.unset();
     interactable.current = interact(nodeRef.current);
-    interactRef.current = interactable.current;
+    interactRef && (interactRef.current = interactable.current);
     setInteractions();
-  }, [draggable, resizable]);
+    
+    return () => {
+      interactable.current && interactable.current.unset();
+    };
+  }, [nodeRef.current, draggable, resizable]);
 
   const setInteractions = () => {
+    if (!interactable.current) return;
+    
     if (draggable)
       interactable.current.draggable({
         ...draggableOptionsRef.current,
@@ -45,8 +54,18 @@ export const InteractComp: FC<{
       });
   };
 
-  return cloneElement(children as ReactElement, {
-    ref: nodeRef,
+  // Use the forwarded ref if provided, otherwise use our internal ref
+  const elementRef = (node) => {
+    nodeRef.current = node;
+    if (typeof ref === 'function') {
+      ref(node);
+    } else if (ref) {
+      ref.current = node;
+    }
+  };
+
+  return cloneElement(children, {
+    ref: elementRef,
     draggable: false,
   });
-};
+});

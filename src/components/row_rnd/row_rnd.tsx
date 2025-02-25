@@ -4,6 +4,7 @@ import React, { ReactElement, useEffect, useImperativeHandle, useRef } from 'rea
 import { DEFAULT_ADSORPTION_DISTANCE, DEFAULT_MOVE_GRID, DEFAULT_START_LEFT } from '../../interface/const';
 import { useAutoScroll } from './hooks/useAutoScroll';
 import { InteractComp } from './interactable';
+import { DropzoneComp } from './dropzone';
 import { Direction, RowRndApi, RowRndProps } from './row_rnd_interface';
 
 export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
@@ -22,8 +23,17 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
       },
       enableResizing = true,
       enableDragging = true,
+      enableDragBetweenTracks = false,
       adsorptionDistance = DEFAULT_ADSORPTION_DISTANCE,
       adsorptionPositions = [],
+      enableDropzone = false,
+      dropzoneOptions,
+      onDropActivate,
+      onDropDeactivate,
+      onDragEnter,
+      onDragLeave,
+      onDropMove,
+      onDrop,
       onResizeStart,
       onResize,
       onResizeEnd,
@@ -36,7 +46,9 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
     ref,
   ) => {
     const interactable = useRef<Interactable>();
+    const dropzoneInteractable = useRef<Interactable>();
     const deltaX = useRef(0);
+    const deltaY = useRef(0);
     const isAdsorption = useRef(false);
     const { initAutoScroll, dealDragAutoScroll, dealResizeAutoScroll, stopAutoScroll } = useAutoScroll(parentRef);
 
@@ -49,8 +61,10 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
     //#region [rgba(100,120,156,0.08)] Assignment related API
     useImperativeHandle(ref, () => ({
       updateLeft: (left) => handleUpdateLeft(left || 0, false),
+      updateTop: (top) => handleUpdateTop(top || 0, false),
       updateWidth: (width) => handleUpdateWidth(width, false),
       getLeft: handleGetLeft,
+      getTop: handleGetTop,
       getWidth: handleGetWidth,
     }));
     useEffect(() => {
@@ -68,6 +82,12 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
       target.style.left = `${left}px`;
       Object.assign(target.dataset, { left });
     };
+    const handleUpdateTop = (top: number, reset = true) => {
+      if (!interactable.current || !interactable.current.target) return;
+      reset && (deltaY.current = 0);
+      const target = interactable.current.target as HTMLElement;
+      Object.assign(target.dataset, { top });
+    };
     const handleUpdateWidth = (width: number, reset = true) => {
       if (!interactable.current || !interactable.current.target) return;
       reset && (deltaX.current = 0);
@@ -75,9 +95,14 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
       target.style.width = `${width}px`;
       Object.assign(target.dataset, { width });
     };
+
     const handleGetLeft = () => {
       const target = interactable.current.target as HTMLElement;
       return parseFloat(target?.dataset?.left || '0');
+    };
+    const handleGetTop = () => {
+      const target = interactable.current.target as HTMLElement;
+      return parseFloat(target?.dataset?.top || '0');
     };
     const handleGetWidth = () => {
       const target = interactable.current.target as HTMLElement;
@@ -86,8 +111,9 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
     //#endregion
 
     //#region [rgba(188,188,120,0.05)] Callback API
-    const handleMoveStart = (e: DragEvent) => {
+    const handleMoveStart = (_: DragEvent) => {
       deltaX.current = 0;
+      deltaY.current = 0;
       isAdsorption.current = false;
       initAutoScroll();
       onDragStart && onDragStart();
@@ -96,52 +122,56 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
     const move = (param: { preLeft: number; preWidth: number; scrollDelta?: number }) => {
       const { preLeft, preWidth, scrollDelta } = param;
       const distance = isAdsorption.current ? adsorptionDistance : grid;
-      if (Math.abs(deltaX.current) >= distance) {
-        const count = parseInt(deltaX.current / distance + '');
-        let curLeft = preLeft + count * distance;
 
-        // Control adsorption
-        let adsorption = curLeft;
-        let minDis = Number.MAX_SAFE_INTEGER;
-        adsorptionPositions.forEach((item) => {
-          const dis = Math.abs(item - curLeft);
-          if (dis < adsorptionDistance && dis < minDis) adsorption = item;
-          const dis2 = Math.abs(item - (curLeft + preWidth));
-          if (dis2 < adsorptionDistance && dis2 < minDis) adsorption = item - preWidth;
-        });
+      // Only processes movement if the accumulated delta (stored in `deltaX.current`) exceeds the minimum distance
+      if (Math.abs(deltaX.current) < distance) return;
 
-        if (adsorption !== curLeft) {
-          // Use adsorption data
-          isAdsorption.current = true;
-          curLeft = adsorption;
-        } else {
-          // Control grid
-          if ((curLeft - start) % grid !== 0) {
-            curLeft = start + grid * Math.round((curLeft - start) / grid);
-          }
-          isAdsorption.current = false;
+      const count = parseInt(deltaX.current / distance + '');
+      let curLeft = preLeft + count * distance;
+
+      // Control adsorption
+      let adsorption = curLeft;
+      let minDis = Number.MAX_SAFE_INTEGER;
+      adsorptionPositions.forEach((item) => {
+        const dis = Math.abs(item - curLeft);
+        if (dis < adsorptionDistance && dis < minDis) adsorption = item;
+        const dis2 = Math.abs(item - (curLeft + preWidth));
+        if (dis2 < adsorptionDistance && dis2 < minDis) adsorption = item - preWidth;
+      });
+
+      if (adsorption !== curLeft) {
+        // Use adsorption data
+        isAdsorption.current = true;
+        curLeft = adsorption;
+      } else {
+        // Control grid
+        if ((curLeft - start) % grid !== 0) {
+          curLeft = start + grid * Math.round((curLeft - start) / grid);
         }
-        deltaX.current = deltaX.current % distance;
-
-        // Control bounds
-        if (curLeft < bounds.left) curLeft = bounds.left;
-        else if (curLeft + preWidth > bounds.right) curLeft = bounds.right - preWidth;
-
-        if (onDrag) {
-          const ret = onDrag(
-            {
-              lastLeft: preLeft,
-              left: curLeft,
-              lastWidth: preWidth,
-              width: preWidth,
-            },
-            scrollDelta,
-          );
-          if (ret === false) return;
-        }
-
-        handleUpdateLeft(curLeft, false);
+        isAdsorption.current = false;
       }
+      deltaX.current = deltaX.current % distance;
+
+      // Control bounds
+      if (curLeft < bounds.left) curLeft = bounds.left;
+      else if (curLeft + preWidth > bounds.right) curLeft = bounds.right - preWidth;
+
+      if (onDrag) {
+        const ret = onDrag(
+          {
+            lastLeft: preLeft,
+            left: curLeft,
+            lastWidth: preWidth,
+            width: preWidth,
+            top: 0,
+            lastTop: 0,
+          },
+          scrollDelta,
+        );
+        if (ret === false) return;
+      }
+
+      handleUpdateLeft(curLeft, false);
     };
 
     const handleMove = (e: DragEvent) => {
@@ -165,17 +195,20 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
       const preWidth = parseFloat(width);
 
       deltaX.current += e.dx;
+      deltaY.current += e.dy;
+
       move({ preLeft, preWidth });
     };
 
     const handleMoveStop = (e: DragEvent) => {
       deltaX.current = 0;
+      deltaY.current = 0;
       isAdsorption.current = false;
       stopAutoScroll();
 
       const target = e.target;
       let { left, width } = target.dataset;
-      onDragEnd && onDragEnd({ left: parseFloat(left), width: parseFloat(width) });
+      onDragEnd && onDragEnd({ left: parseFloat(left), width: parseFloat(width), top: 0 });
     };
 
     const handleResizeStart = (e: ResizeEvent) => {
@@ -324,42 +357,56 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
     //#endregion
 
     return (
-      <InteractComp
-        interactRef={interactable}
-        draggable={enableDragging}
-        resizable={enableResizing}
-        draggableOptions={{
-          lockAxis: 'x',
-          onmove: handleMove,
-          onstart: handleMoveStart,
-          onend: handleMoveStop,
-          cursorChecker: () => {
-            return null;
-          },
-        }}
-        resizableOptions={{
-          axis: 'x',
-          invert: 'none',
-          edges: {
-            left: true,
-            right: true,
-            top: false,
-            bottom: false,
-            ...(edges || {}),
-          },
-          onmove: handleResize,
-          onstart: handleResizeStart,
-          onend: handleResizeStop,
+      <DropzoneComp
+        dropzoneRef={dropzoneInteractable}
+        enabled={enableDropzone}
+        dropzoneOptions={{
+          ...dropzoneOptions,
+          ondropactivate: onDropActivate,
+          ondropdeactivate: onDropDeactivate,
+          ondragenter: onDragEnter,
+          ondragleave: onDragLeave,
+          ondropmove: onDropMove,
+          ondrop: onDrop,
         }}
       >
-        {React.cloneElement(children as ReactElement, {
-          style: {
-            ...((children as ReactElement).props.style || {}),
-            left,
-            width,
-          },
-        })}
-      </InteractComp>
+        <InteractComp
+          interactRef={interactable}
+          draggable={enableDragging}
+          resizable={enableResizing}
+          draggableOptions={{
+            lockAxis: enableDragBetweenTracks ? 'xy' : 'x',
+            onmove: handleMove,
+            onstart: handleMoveStart,
+            onend: handleMoveStop,
+            cursorChecker: () => {
+              return null;
+            },
+          }}
+          resizableOptions={{
+            axis: 'x',
+            invert: 'none',
+            edges: {
+              left: true,
+              right: true,
+              top: false,
+              bottom: false,
+              ...(edges || {}),
+            },
+            onmove: handleResize,
+            onstart: handleResizeStart,
+            onend: handleResizeStop,
+          }}
+        >
+          {React.cloneElement(children as ReactElement, {
+            style: {
+              ...((children as ReactElement).props.style || {}),
+              left,
+              width,
+            },
+          })}
+        </InteractComp>
+      </DropzoneComp>
     );
   },
 );
