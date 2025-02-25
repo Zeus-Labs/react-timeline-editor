@@ -4,6 +4,7 @@ import React, { ReactElement, useEffect, useImperativeHandle, useRef } from 'rea
 import { DEFAULT_ADSORPTION_DISTANCE, DEFAULT_MOVE_GRID, DEFAULT_START_LEFT } from '../../interface/const';
 import { useAutoScroll } from './hooks/useAutoScroll';
 import { InteractComp } from './interactable';
+import { DropzoneComp } from './dropzone';
 import { Direction, RowRndApi, RowRndProps } from './row_rnd_interface';
 
 export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
@@ -25,6 +26,14 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
       enableDragBetweenTracks = false,
       adsorptionDistance = DEFAULT_ADSORPTION_DISTANCE,
       adsorptionPositions = [],
+      enableDropzone = false,
+      dropzoneOptions,
+      onDropActivate,
+      onDropDeactivate,
+      onDragEnter,
+      onDragLeave,
+      onDropMove,
+      onDrop,
       onResizeStart,
       onResize,
       onResizeEnd,
@@ -37,6 +46,7 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
     ref,
   ) => {
     const interactable = useRef<Interactable>();
+    const dropzoneInteractable = useRef<Interactable>();
     const deltaX = useRef(0);
     const deltaY = useRef(0);
     const isAdsorption = useRef(false);
@@ -347,42 +357,56 @@ export const RowDnd = React.forwardRef<RowRndApi, RowRndProps>(
     //#endregion
 
     return (
-      <InteractComp
-        interactRef={interactable}
-        draggable={enableDragging}
-        resizable={enableResizing}
-        draggableOptions={{
-          lockAxis: enableDragBetweenTracks ? 'xy' : 'x',
-          onmove: handleMove,
-          onstart: handleMoveStart,
-          onend: handleMoveStop,
-          cursorChecker: () => {
-            return null;
-          },
-        }}
-        resizableOptions={{
-          axis: 'x',
-          invert: 'none',
-          edges: {
-            left: true,
-            right: true,
-            top: false,
-            bottom: false,
-            ...(edges || {}),
-          },
-          onmove: handleResize,
-          onstart: handleResizeStart,
-          onend: handleResizeStop,
+      <DropzoneComp
+        dropzoneRef={dropzoneInteractable}
+        enabled={enableDropzone}
+        dropzoneOptions={{
+          ...dropzoneOptions,
+          ondropactivate: onDropActivate,
+          ondropdeactivate: onDropDeactivate,
+          ondragenter: onDragEnter,
+          ondragleave: onDragLeave,
+          ondropmove: onDropMove,
+          ondrop: onDrop,
         }}
       >
-        {React.cloneElement(children as ReactElement, {
-          style: {
-            ...((children as ReactElement).props.style || {}),
-            left,
-            width,
-          },
-        })}
-      </InteractComp>
+        <InteractComp
+          interactRef={interactable}
+          draggable={enableDragging}
+          resizable={enableResizing}
+          draggableOptions={{
+            lockAxis: enableDragBetweenTracks ? 'xy' : 'x',
+            onmove: handleMove,
+            onstart: handleMoveStart,
+            onend: handleMoveStop,
+            cursorChecker: () => {
+              return null;
+            },
+          }}
+          resizableOptions={{
+            axis: 'x',
+            invert: 'none',
+            edges: {
+              left: true,
+              right: true,
+              top: false,
+              bottom: false,
+              ...(edges || {}),
+            },
+            onmove: handleResize,
+            onstart: handleResizeStart,
+            onend: handleResizeStop,
+          }}
+        >
+          {React.cloneElement(children as ReactElement, {
+            style: {
+              ...((children as ReactElement).props.style || {}),
+              left,
+              width,
+            },
+          })}
+        </InteractComp>
+      </DropzoneComp>
     );
   },
 );

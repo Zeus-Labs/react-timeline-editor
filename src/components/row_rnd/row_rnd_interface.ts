@@ -1,4 +1,5 @@
 import { DragEvent, ResizeEvent } from '@interactjs/types/index';
+import { DropzoneOptions, DropzoneEvent } from './dropzone_types';
 
 type EventData = {
   lastLeft: number;
@@ -21,6 +22,13 @@ export type RndResizeStartCallback = (dir: Direction) => void;
 export type RndResizeCallback = (dir: Direction, data: EventData) => boolean | void;
 export type RndResizeEndCallback = (dir: Direction, data: Pick<EventData, 'left' | 'width'>) => void;
 
+
+export type RndDropActivateCallback = (event: DropzoneEvent) => void;
+export type RndDropDeactivateCallback = (event: DropzoneEvent) => void;
+export type RndDragEnterCallback = (event: DropzoneEvent) => void;
+export type RndDragLeaveCallback = (event: DropzoneEvent) => void;
+export type RndDropMoveCallback = (event: DropzoneEvent) => void;
+export type RndDropCallback = (event: DropzoneEvent) => void;
 export interface RowRndApi {
   updateWidth: (size: number) => void;
   updateLeft: (left: number) => void;
@@ -55,4 +63,14 @@ export interface RowRndProps {
   enableDragBetweenTracks?: boolean;
   adsorptionPositions?: number[];
   adsorptionDistance?: number;
+
+  enableDropzone?: boolean;
+  dropzoneOptions?: DropzoneOptions;
+  onDropActivate?: RndDropActivateCallback;
+  onDropDeactivate?: RndDropDeactivateCallback;
+  onDragEnter?: RndDragEnterCallback;
+  onDragLeave?: RndDragLeaveCallback;
+  onDropMove?: RndDropMoveCallback;
+  onDrop?: RndDropCallback;
+
 }

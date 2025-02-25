@@ -114,6 +114,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
         key={key}
         rowHeight={row?.rowHeight || rowHeight}
         rowData={row}
+        rowIndex={rowIndex}
         dragLineData={dragLineData}
         onActionMoveStart={(data) => {
           handleInitDragLine(data);

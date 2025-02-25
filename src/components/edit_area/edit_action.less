@@ -4,6 +4,12 @@
     left: 0;
     top: 0;
     background-color: #2f3134;
+    transition: opacity 0.2s ease, transform 0.1s ease;
+
+    &-dragging {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+    }
 
     & &-left-stretch,
     & &-right-stretch {

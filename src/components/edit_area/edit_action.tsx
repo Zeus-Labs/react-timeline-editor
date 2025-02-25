@@ -8,6 +8,7 @@ import { RowDnd } from '../row_rnd/row_rnd';
 import { RndDragCallback, RndDragEndCallback, RndDragStartCallback, RndResizeCallback, RndResizeEndCallback, RndResizeStartCallback, RowRndApi } from '../row_rnd/row_rnd_interface';
 import { DragLineData } from './drag_lines';
 import './edit_action.less';
+import { findRowIndexByPosition, getRowYPosition } from '../../utils/row_utils';
 
 export type EditActionProps = CommonProp & {
   row: TimelineRow;
@@ -59,6 +60,7 @@ export const EditAction: FC<EditActionProps> = ({
   const rowRnd = useRef<RowRndApi>();
   const isDragWhenClick = useRef(false);
   const { id, maxEnd, minStart, end, start, selected, flexible = true, movable = true, effectId } = action;
+  const [isDragging, setIsDragging] = useState(false);
 
   // Get max/min pixel range
   const leftLimit = parserTimeToPixel(minStart || 0, {
@@ -93,6 +95,7 @@ export const EditAction: FC<EditActionProps> = ({
   if (selected) classNames.push('action-selected');
   if (flexible) classNames.push('action-flexible');
   if (effects[effectId]) classNames.push(`action-effect-${effectId}`);
+  if (isDragging) classNames.push('action-dragging');
 
   /** Calculate scale count */
   const handleScaleCount = (left: number, width: number) => {
@@ -106,11 +109,27 @@ export const EditAction: FC<EditActionProps> = ({
 
   //#region [rgba(100,120,156,0.08)] callbacks
   const handleDragStart: RndDragStartCallback = () => {
+    setIsDragging(true);
     onActionMoveStart && onActionMoveStart({ action, row });
   };
-  const handleDrag: RndDragCallback = ({ left, width }) => {
+
+  const handleDrag: RndDragCallback = ({ left, width, top }) => {
     isDragWhenClick.current = true;
 
+    if (enableDragBetweenTracks && top !== 0) {
+      // When dragging between tracks, we just update the visual position
+      // The actual data update happens on drag end
+      if (onActionMoving) {
+        const { start, end } = parserTransformToTime({ left, width }, { scaleWidth, scale, startLeft });
+        const result = onActionMoving({ action, row, start, end });
+        if (result === false) return false;
+      }
+      setTransform({ left, width });
+      handleScaleCount(left, width);
+      return;
+    }
+
+    // Normal horizontal drag within the same track
     if (onActionMoving) {
       const { start, end } = parserTransformToTime({ left, width }, { scaleWidth, scale, startLeft });
       const result = onActionMoving({ action, row, start, end });
@@ -120,19 +139,64 @@ export const EditAction: FC<EditActionProps> = ({
     handleScaleCount(left, width);
   };
 
-  const handleDragEnd: RndDragEndCallback = ({ left, width }) => {
+  const handleDragEnd: RndDragEndCallback = ({ left, width, top }) => {
+    setIsDragging(false);
+    
     // Calculate time
-    const { start, end } = parserTransformToTime({ left, width }, { scaleWidth, scale, startLeft });
-
-    // Set data
+    const { start: newStart, end: newEnd } = parserTransformToTime({ left, width }, { scaleWidth, scale, startLeft });
+    
+    if (enableDragBetweenTracks && top !== 0) {
+      // Find the target row based on the vertical position
+      const targetRowIndex = findRowIndexByPosition(top, editorData, rowHeight);
+      const targetRow = editorData[targetRowIndex];
+      
+      if (targetRow && targetRow.id !== row.id) {
+        // Remove action from source row
+        const sourceRow = editorData.find(r => r.id === row.id);
+        sourceRow.actions = sourceRow.actions.filter(a => a.id !== action.id);
+        
+        // Add action to target row with updated time values
+        const updatedAction = {
+          ...action,
+          start: newStart,
+          end: newEnd
+        };
+        
+        targetRow.actions.push(updatedAction);
+        
+        // Update editor data
+        setEditorData([...editorData]);
+        
+        // Execute callback
+        if (onActionMoveEnd) {
+          onActionMoveEnd({ 
+            action: updatedAction, 
+            row: targetRow, 
+            start: newStart, 
+            end: newEnd 
+          });
+        }
+        
+        return;
+      }
+    }
+    
+    // Normal drag end within the same row
     const rowItem = editorData.find((item) => item.id === row.id);
-    const action = rowItem.actions.find((item) => item.id === id);
-    action.start = start;
-    action.end = end;
-    setEditorData(editorData);
+    const actionItem = rowItem.actions.find((item) => item.id === id);
+    actionItem.start = newStart;
+    actionItem.end = newEnd;
+    setEditorData([...editorData]);
 
     // Execute callback
-    if (onActionMoveEnd) onActionMoveEnd({ action, row, start, end });
+    if (onActionMoveEnd) {
+      onActionMoveEnd({ 
+        action: actionItem, 
+        row: rowItem, 
+        start: newStart, 
+        end: newEnd 
+      });
+    }
   };
 
   const handleResizeStart: RndResizeStartCallback = (dir) => {
@@ -236,7 +300,14 @@ export const EditAction: FC<EditActionProps> = ({
           }
         }}
         className={prefix((classNames || []).join(' '))}
-        style={{ height: rowHeight }}
+        style={{ 
+          height: rowHeight,
+          cursor: isDragging ? 'grabbing' : 'grab',
+          opacity: isDragging ? 0.8 : 1,
+          zIndex: isDragging ? 1000 : 1
+        }}
+        data-action-id={action.id}
+        data-row-id={row.id}
       >
         {getActionRender && getActionRender(nowAction, nowRow)}
         {flexible && <div className={prefix('action-left-stretch')} />}
