@@ -99,9 +99,10 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
     }
   };
 
-  /** 获取每个cell渲染内容 */
+  /** Get the rendering content for each cell */
   const cellRenderer: GridCellRenderer = ({ rowIndex, key, style }) => {
-    const row = editorData[rowIndex]; // 行数据
+    const row = editorData[rowIndex]; // Row data
+
     return (
       <EditRow
         {...props}
