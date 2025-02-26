@@ -5,7 +5,7 @@ import { DEFAULT_ADSORPTION_DISTANCE, DEFAULT_MOVE_GRID } from '../../interface/
 import { prefix } from '../../utils/deal_class_prefix';
 import { getScaleCountByPixel, parserTimeToPixel, parserTimeToTransform, parserTransformToTime } from '../../utils/deal_data';
 import { RowDnd } from '../row_rnd/row_rnd';
-import { RndDragCallback, RndDragEndCallback, RndDragStartCallback, RndResizeCallback, RndResizeEndCallback, RndResizeStartCallback, RowRndApi } from '../row_rnd/row_rnd_interface';
+import { RndResizeCallback, RndResizeEndCallback, RndResizeStartCallback, RowRndApi } from '../row_rnd/row_rnd_interface';
 import { DragLineData } from './drag_lines';
 import './edit_action.less';
 
@@ -36,9 +36,6 @@ export const EditAction: FC<EditActionProps> = ({
   scaleCount,
   maxScaleCount,
   setScaleCount,
-  onActionMoveStart,
-  onActionMoving,
-  onActionMoveEnd,
   onActionResizeStart,
   onActionResizeEnd,
   onActionResizing,
@@ -103,35 +100,36 @@ export const EditAction: FC<EditActionProps> = ({
   };
 
   //#region [rgba(100,120,156,0.08)] callbacks
-  const handleDragStart: RndDragStartCallback = () => {
-    onActionMoveStart && onActionMoveStart({ action, row });
-  };
-  const handleDrag: RndDragCallback = ({ left, width }) => {
-    isDragWhenClick.current = true;
-
-    if (onActionMoving) {
-      const { start, end } = parserTransformToTime({ left, width }, { scaleWidth, scale, startLeft });
-      const result = onActionMoving({ action, row, start, end });
-      if (result === false) return false;
-    }
-    setTransform({ left, width });
-    handleScaleCount(left, width);
-  };
-
-  const handleDragEnd: RndDragEndCallback = ({ left, width }) => {
-    // Calculate time
-    const { start, end } = parserTransformToTime({ left, width }, { scaleWidth, scale, startLeft });
-
-    // Set data
-    const rowItem = editorData.find((item) => item.id === row.id);
-    const action = rowItem.actions.find((item) => item.id === id);
-    action.start = start;
-    action.end = end;
-    setEditorData(editorData);
-
-    // Execute callback
-    if (onActionMoveEnd) onActionMoveEnd({ action, row, start, end });
-  };
+  //const handleDragStart: RndDragStartCallback = () => {
+  //  onActionMoveStart && onActionMoveStart({ action, row });
+  //};
+  //
+  //const handleDrag: RndDragCallback = ({ left, width }) => {
+  //  isDragWhenClick.current = true;
+  //
+  //  if (onActionMoving) {
+  //    const { start, end } = parserTransformToTime({ left, width }, { scaleWidth, scale, startLeft });
+  //    const result = onActionMoving({ action, row, start, end });
+  //    if (result === false) return false;
+  //  }
+  //  setTransform({ left, width });
+  //  handleScaleCount(left, width);
+  //};
+  //
+  //const handleDragEnd: RndDragEndCallback = ({ left, width }) => {
+  //  // Calculate time
+  //  const { start, end } = parserTransformToTime({ left, width }, { scaleWidth, scale, startLeft });
+  //
+  //  // Set data
+  //  const rowItem = editorData.find((item) => item.id === row.id);
+  //  const action = rowItem.actions.find((item) => item.id === id);
+  //  action.start = start;
+  //  action.end = end;
+  //  setEditorData(editorData);
+  //
+  //  // Execute callback
+  //  if (onActionMoveEnd) onActionMoveEnd({ action, row, start, end });
+  //};
 
   const handleResizeStart: RndResizeStartCallback = (dir) => {
     onActionResizeStart && onActionResizeStart({ action, row, dir });
@@ -195,11 +193,8 @@ export const EditAction: FC<EditActionProps> = ({
         left: !disableDrag && flexible && `.${prefix('action-left-stretch')}`,
         right: !disableDrag && flexible && `.${prefix('action-right-stretch')}`,
       }}
-      enableDragging={!disableDrag && movable}
+      enableDragging={false}
       enableResizing={!disableDrag && flexible}
-      onDragStart={handleDragStart}
-      onDrag={handleDrag}
-      onDragEnd={handleDragEnd}
       onResizeStart={handleResizeStart}
       onResize={handleResizing}
       onResizeEnd={handleResizeEnd}
