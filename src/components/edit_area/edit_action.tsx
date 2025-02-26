@@ -16,8 +16,14 @@ export type EditActionProps = CommonProp & {
   setEditorData: (params: TimelineRow[]) => void;
   handleTime: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => number;
   areaRef: React.MutableRefObject<HTMLDivElement>;
-  /** 设置scroll left */
+  /** Set scroll left */
   deltaScrollLeft?: (delta: number) => void;
+  /** Callback triggered when dragging starts */
+  onDragStart: (
+    action: TimelineAction,
+    clientX: number,
+    clientY: number,
+  ) => void;
 };
 
 export const EditAction: FC<EditActionProps> = ({
@@ -39,6 +45,7 @@ export const EditAction: FC<EditActionProps> = ({
   onActionResizeStart,
   onActionResizeEnd,
   onActionResizing,
+  onDragStart,
 
   dragLineData,
   setEditorData,
@@ -52,7 +59,6 @@ export const EditAction: FC<EditActionProps> = ({
   deltaScrollLeft,
 }) => {
   const rowRnd = useRef<RowRndApi>();
-  const isDragWhenClick = useRef(false);
   const { id, maxEnd, minStart, end, start, selected, flexible = true, movable = true, effectId } = action;
 
   // Get max/min pixel range
@@ -103,7 +109,6 @@ export const EditAction: FC<EditActionProps> = ({
   //const handleDragStart: RndDragStartCallback = () => {
   //  onActionMoveStart && onActionMoveStart({ action, row });
   //};
-  //
   //const handleDrag: RndDragCallback = ({ left, width }) => {
   //  isDragWhenClick.current = true;
   //
@@ -136,7 +141,6 @@ export const EditAction: FC<EditActionProps> = ({
   };
 
   const handleResizing: RndResizeCallback = (dir, { left, width }) => {
-    isDragWhenClick.current = true;
     if (onActionResizing) {
       const { start, end } = parserTransformToTime({ left, width }, { scaleWidth, scale, startLeft });
       const result = onActionResizing({ action, row, start, end, dir });
@@ -201,16 +205,15 @@ export const EditAction: FC<EditActionProps> = ({
       deltaScrollLeft={deltaScrollLeft}
     >
       <div
-        onMouseDown={() => {
-          isDragWhenClick.current = false;
-        }}
+        onMouseDown={(e) => onDragStart(action, e.clientX, e.clientY)}
         onClick={(e) => {
           let time: number;
           if (onClickAction) {
             time = handleTime(e);
             onClickAction(e, { row, action, time: time });
           }
-          if (!isDragWhenClick.current && onClickActionOnly) {
+          // TODO: identify when it is a just a click vrs click and drag or resize
+          if (onClickActionOnly) {
             if (!time) time = handleTime(e);
             onClickActionOnly(e, { row, action, time: time });
           }
@@ -231,8 +234,12 @@ export const EditAction: FC<EditActionProps> = ({
         style={{ height: rowHeight }}
       >
         {getActionRender && getActionRender(nowAction, nowRow)}
-        {flexible && <div className={prefix('action-left-stretch')} />}
-        {flexible && <div className={prefix('action-right-stretch')} />}
+        {flexible && <div
+          onMouseDown={(e) => e.stopPropagation()}
+          className={prefix('action-left-stretch')} />}
+        {flexible && <div
+          onMouseDown={(e) => e.stopPropagation()}
+          className={prefix('action-right-stretch')} />}
       </div>
     </RowDnd>
   );
