@@ -48,8 +48,6 @@ const actionUpdateTimes = (actionInfo: ActionInfo): TimelineAction => {
 interface DragInfo {
   startX: number;
   startY: number;
-  rightLimit: number;
-  leftLimit: number;
 }
 
 interface ActionInfo {
@@ -264,8 +262,20 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
       deltaX = deltaX % distance;
 
       // Control bounds
-      const leftLimit = actionInfo.dragInfo.leftLimit;
-      const rightLimit = actionInfo.dragInfo.rightLimit;
+      const leftLimit = parserTimeToPixel(actionInfo.ghostAction.minStart || 0, {
+        startLeft,
+        scale,
+        scaleWidth,
+      });
+
+      const rightLimit = Math.min(
+        maxScaleCount * scaleWidth + startLeft, // Limit movement range based on maxScaleCount
+        parserTimeToPixel(actionInfo.ghostAction.maxEnd || Number.MAX_VALUE, {
+          startLeft,
+          scale,
+          scaleWidth,
+        }),
+      );
 
       if (curLeft < leftLimit) curLeft = leftLimit;
       else if (curLeft + width > rightLimit) curLeft = rightLimit - width;
@@ -298,26 +308,11 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
       }));
       handleScaleCount(left, width);
     },
-    [actionInfo, startLeft, scale, scaleWidth, onActionMoving, scaleSplitCount, gridSnap, dragLineData, editorData, handleScaleCount, handleUpdateDragLine],
+    [actionInfo, startLeft, scale, scaleWidth, onActionMoving, scaleSplitCount, gridSnap, dragLineData, maxScaleCount, editorData, handleScaleCount, handleUpdateDragLine],
   );
 
   const onDragStart = useCallback(
     (action: TimelineAction, row: TimelineRow, clientX: number, clientY: number, rowIndex: number) => {
-      const leftLimit = parserTimeToPixel(action.minStart || 0, {
-        startLeft,
-        scale,
-        scaleWidth,
-      });
-
-      const rightLimit = Math.min(
-        maxScaleCount * scaleWidth + startLeft, // Limit movement range based on maxScaleCount
-        parserTimeToPixel(action.maxEnd || Number.MAX_VALUE, {
-          startLeft,
-          scale,
-          scaleWidth,
-        }),
-      );
-
       setEditorState((prevState) => ({
         tracks: prevState.tracks,
         actionInfo: {
@@ -335,8 +330,6 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
           dragInfo: {
             startX: clientX,
             startY: clientY,
-            rightLimit,
-            leftLimit,
           },
         },
       }));
