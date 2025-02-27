@@ -229,11 +229,9 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
       else if (curLeft + width > rightLimit) curLeft = rightLimit - width;
 
       const { start, end } = parserTransformToTime({ left: curLeft, width }, { scaleWidth, scale, startLeft });
+      const newAction = { ...actionInfo.action, start, end };
 
-      const hasChangedRow = actionInfo.ghostRowIndex !== actionInfo.rowIndex;
-      // if it has change the row then add the original action to the new row
-      // else just send the same row
-      const row = hasChangedRow ? addActionToRow(editorData[actionInfo.rowIndex], actionUpdateTimes(actionInfo)) : editorData[actionInfo.rowIndex];
+      const row = addActionToRow(removeActionFromRow(editorData[actionInfo.rowIndex], newAction.id), newAction);
 
       const data = { action: actionInfo.action, row, start, end };
 
