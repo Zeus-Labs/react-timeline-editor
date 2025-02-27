@@ -188,7 +188,6 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
 
       // Check if the movement is valid
       if (onActionMoving) {
-        // TODO: the origi
         const result = onActionMoving(data);
         if (result === false) return;
       }
@@ -239,7 +238,6 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
 
       // Check if the movement is valid
       if (onActionMoving) {
-        // TODO: set the correct original row + action in case of movement between rows
         const result = onActionMoving(data);
         if (result === false) return;
       }
