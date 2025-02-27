@@ -108,6 +108,8 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
     onActionResizeStart,
     onActionResizing,
     setEditorData,
+    gridSnap,
+    scaleSplitCount,
   } = props;
   const { dragLineData, initDragLine, updateDragLine, disposeDragLine, defaultGetAssistPosition, defaultGetMovePosition } = useDragLine();
   const editAreaRef = useRef<HTMLDivElement>();
@@ -214,9 +216,10 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
 
       let deltaX = e.clientX - actionInfo.dragInfo.startX;
 
-      // TODO implement gridSnap
-      const adsorptionDistance = DEFAULT_ADSORPTION_DISTANCE;
-      const grid = DEFAULT_MOVE_GRID;
+      const gridSize = scaleWidth / scaleSplitCount;
+      const adsorptionDistance = gridSnap ? Math.max((gridSize || DEFAULT_MOVE_GRID) / 2, DEFAULT_ADSORPTION_DISTANCE) : DEFAULT_ADSORPTION_DISTANCE;
+
+      const grid = (gridSnap && gridSize) || DEFAULT_MOVE_GRID;
       const distance = isAdsorption.current ? adsorptionDistance : grid;
       if (Math.abs(deltaX) < distance) return;
 
