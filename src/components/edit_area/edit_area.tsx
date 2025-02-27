@@ -1,4 +1,4 @@
-import { DEFAULT_MOVE_GRID } from '@/interface/const';
+import { DEFAULT_ADSORPTION_DISTANCE, DEFAULT_MOVE_GRID } from '@/interface/const';
 import React, { useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import { AutoSizer, Grid, GridCellRenderer, OnScrollParams } from 'react-virtualized';
 import { TimelineAction, TimelineRow } from '../../interface/action';
@@ -113,6 +113,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
   const editAreaRef = useRef<HTMLDivElement>();
   const gridRef = useRef<Grid>();
   const heightRef = useRef(-1);
+  const isAdsorption = useRef(false);
 
   // Combined state for tracks and ghost action
   const [editorState, setEditorState] = useState<EditorAreaInternalState>({
@@ -211,14 +212,39 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
 
       const { left, width } = parserTimeToTransform({ start: actionInfo.action.start, end: actionInfo.action.end }, { startLeft, scale, scaleWidth });
 
-      const deltaX = e.clientX - actionInfo.dragInfo.startX;
+      let deltaX = e.clientX - actionInfo.dragInfo.startX;
 
-      // TODO: snap the value
-      const distance = DEFAULT_MOVE_GRID;
+      // TODO implement gridSnap
+      const adsorptionDistance = DEFAULT_ADSORPTION_DISTANCE;
+      const grid = DEFAULT_MOVE_GRID;
+      const distance = isAdsorption.current ? adsorptionDistance : grid;
+      if (Math.abs(deltaX) < distance) return;
 
       const count = Math.floor(deltaX / distance);
-
       let curLeft = left + count * distance;
+
+      // Control adsorption
+      let adsorption = curLeft;
+      let minDis = Number.MAX_SAFE_INTEGER;
+      dragLineData.assistPositions.forEach((item) => {
+        const dis = Math.abs(item - curLeft);
+        if (dis < adsorptionDistance && dis < minDis) adsorption = item;
+        const dis2 = Math.abs(item - (curLeft + width));
+        if (dis2 < adsorptionDistance && dis2 < minDis) adsorption = item - width;
+      });
+
+      if (adsorption !== curLeft) {
+        // Use adsorption data
+        isAdsorption.current = true;
+        curLeft = adsorption;
+      } else {
+        // Control grid
+        if ((curLeft - startLeft) % grid !== 0) {
+          curLeft = startLeft + grid * Math.round((curLeft - startLeft) / grid);
+        }
+        isAdsorption.current = false;
+      }
+      deltaX = deltaX % distance;
 
       // Control bounds
       const leftLimit = actionInfo.dragInfo.leftLimit;
@@ -362,6 +388,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
         onDragStart={(action: TimelineAction, row: TimelineRow, clientX: number, clientY: number) => {
           handleInitDragLine({ action, row });
           onDragStart(action, row, clientX, clientY, rowIndex);
+          onActionMoveStart?.({ action, row });
         }}
         dragLineData={dragLineData}
         onActionMoveStart={(data) => {
