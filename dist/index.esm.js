@@ -2430,7 +2430,7 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
         })
       };
     });
-  }, [actionInfo, tracks, _onActionMoving, editorData]);
+  }, [actionInfo, _onActionMoving, editorData]);
   /** Calculate scale count */
   var handleScaleCount = useCallback(function (left, width) {
     var curScaleCount = getScaleCountByPixel(left + width, {
@@ -2439,7 +2439,7 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
       scaleWidth: scaleWidth
     });
     if (curScaleCount !== scaleCount) setScaleCount(curScaleCount);
-  }, [setScaleCount]);
+  }, [setScaleCount, startLeft, scaleCount, scaleWidth]);
   var handleMouseMove = useCallback(function (e) {
     if (!actionInfo) return;
     var _parserTimeToTransfor = parserTimeToTransform({
@@ -2523,7 +2523,7 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
       });
     });
     handleScaleCount(left, width);
-  }, [actionInfo, startLeft, scale, scaleWidth, _onActionMoving, scaleSplitCount]);
+  }, [actionInfo, startLeft, scale, scaleWidth, _onActionMoving, scaleSplitCount, gridSnap, dragLineData, editorData, handleScaleCount, handleUpdateDragLine]);
   var _onDragStart = useCallback(function (action, row, clientX, clientY, rowIndex) {
     var leftLimit = parserTimeToPixel(action.minStart || 0, {
       startLeft: startLeft,
@@ -2558,7 +2558,7 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
         }
       };
     });
-  }, []);
+  }, [startLeft, scale, scaleWidth, maxScaleCount]);
   var handleMouseUp = useCallback(function (_) {
     if (!actionInfo) return;
     disposeDragLine();
@@ -2587,7 +2587,7 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
       start: origAction.start,
       end: origAction.end
     });
-  }, [actionInfo, editorData, setEditorData]);
+  }, [actionInfo, editorData, setEditorData, disposeDragLine, _onActionMoveEnd]);
   /** Get the rendering content for each cell */
   var cellRenderer = function cellRenderer(_ref) {
     var rowIndex = _ref.rowIndex,
