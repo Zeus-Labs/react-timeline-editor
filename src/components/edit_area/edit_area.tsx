@@ -80,7 +80,7 @@ export type EditAreaProps = CommonProp & {
 
 /** Edit area ref data */
 export interface EditAreaState {
-  domRef: React.MutableRefObject<HTMLDivElement>;
+  domRef: React.RefObject<HTMLDivElement>;
 }
 
 export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, ref) => {
@@ -111,8 +111,8 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
     setScaleCount,
   } = props;
   const { dragLineData, initDragLine, updateDragLine, disposeDragLine, defaultGetAssistPosition, defaultGetMovePosition } = useDragLine();
-  const editAreaRef = useRef<HTMLDivElement>();
-  const gridRef = useRef<Grid>();
+  const editAreaRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<Grid>(null);
   const heightRef = useRef(-1);
   const isAdsorption = useRef(false);
 
@@ -175,167 +175,177 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
 
   const updateCurrentRow = useCallback(
     (targetRowIndex: number, row?: TimelineRow) => {
-      // only execute when row changes
-      if (!actionInfo || !row || row?.id === actionInfo.ghostRow.id) return;
+      if (!row) return;
 
-      const action = actionUpdateTimes(actionInfo);
-      const data = {
-        // set the original action with updated times
-        action,
-        row: addActionToRow(editorData[targetRowIndex], action),
-        // use the times of the ghost action
-        start: actionInfo.ghostAction.start,
-        end: actionInfo.ghostAction.end,
-      };
+      setEditorState((prev) => {
+        const currentActionInfo = prev.actionInfo;
 
-      // Check if the movement is valid
-      if (onActionMoving) {
-        const result = onActionMoving(data);
-        if (result === false) return;
-      }
+        // only execute when row changes and actionInfo exists
+        if (!currentActionInfo || row.id === currentActionInfo.ghostRow.id) return prev;
 
-      // Update the editor state with new tracks and updated ghost action
-      setEditorState((prev) => ({
-        tracks: prev.tracks,
-        actionInfo: {
-          ...actionInfo,
-          ghostRow: row,
-          rowIndex: targetRowIndex,
-        },
-      }));
+        const action = actionUpdateTimes(currentActionInfo);
+        const data = {
+          // set the original action with updated times
+          action,
+          row: addActionToRow(editorData[targetRowIndex], action),
+          // use the times of the ghost action
+          start: currentActionInfo.ghostAction.start,
+          end: currentActionInfo.ghostAction.end,
+        };
+
+        // Check if the movement is valid
+        if (onActionMoving) {
+          const result = onActionMoving(data);
+          if (result === false) return prev;
+        }
+
+        // Return updated state with new tracks and updated ghost action
+        return {
+          tracks: prev.tracks,
+          actionInfo: {
+            ...currentActionInfo,
+            ghostRow: row,
+            rowIndex: targetRowIndex,
+          },
+        };
+      });
     },
-    [actionInfo, onActionMoving, editorData],
+    [editorData, onActionMoving],
   );
 
   /** Calculate scale count */
-  const handleScaleCount = useCallback(
-    (left: number, width: number) => {
-      const curScaleCount = getScaleCountByPixel(left + width, {
-        startLeft,
-        scaleCount,
-        scaleWidth,
-      });
-      if (curScaleCount !== scaleCount) setScaleCount(curScaleCount);
-    },
-    [setScaleCount, startLeft, scaleCount, scaleWidth],
-  );
+  const handleScaleCount = (left: number, width: number) => {
+    const curScaleCount = getScaleCountByPixel(left + width, {
+      startLeft,
+      scaleCount,
+      scaleWidth,
+    });
+    if (curScaleCount !== scaleCount) setScaleCount(curScaleCount);
+  };
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!actionInfo) return;
+      // Use a function to get the latest state
+      setEditorState((prev) => {
+        const currentActionInfo = prev.actionInfo;
 
-      const { left, width } = parserTimeToTransform({ start: actionInfo.action.start, end: actionInfo.action.end }, { startLeft, scale, scaleWidth });
+        // Early return if no action info
+        if (!currentActionInfo) return prev;
 
-      let deltaX = e.clientX - actionInfo.dragInfo.startX;
+        const { left, width } = parserTimeToTransform({ start: currentActionInfo.action.start, end: currentActionInfo.action.end }, { startLeft, scale, scaleWidth });
 
-      const gridSize = scaleWidth / scaleSplitCount;
-      const adsorptionDistance = gridSnap ? Math.max((gridSize || DEFAULT_MOVE_GRID) / 2, DEFAULT_ADSORPTION_DISTANCE) : DEFAULT_ADSORPTION_DISTANCE;
+        let deltaX = e.clientX - currentActionInfo.dragInfo.startX;
 
-      const grid = (gridSnap && gridSize) || DEFAULT_MOVE_GRID;
-      const distance = isAdsorption.current ? adsorptionDistance : grid;
-      if (Math.abs(deltaX) < distance) return;
+        const gridSize = scaleWidth / scaleSplitCount;
+        const adsorptionDistance = gridSnap ? Math.max((gridSize || DEFAULT_MOVE_GRID) / 2, DEFAULT_ADSORPTION_DISTANCE) : DEFAULT_ADSORPTION_DISTANCE;
 
-      const count = Math.floor(deltaX / distance);
-      let curLeft = left + count * distance;
+        const grid = (gridSnap && gridSize) || DEFAULT_MOVE_GRID;
+        const distance = isAdsorption.current ? adsorptionDistance : grid;
 
-      // Control adsorption
-      let adsorption = curLeft;
-      let minDis = Number.MAX_SAFE_INTEGER;
-      dragLineData.assistPositions.forEach((item) => {
-        const dis = Math.abs(item - curLeft);
-        if (dis < adsorptionDistance && dis < minDis) adsorption = item;
-        const dis2 = Math.abs(item - (curLeft + width));
-        if (dis2 < adsorptionDistance && dis2 < minDis) adsorption = item - width;
-      });
+        // If movement is too small, don't update
+        if (Math.abs(deltaX) < distance) return prev;
 
-      if (adsorption !== curLeft) {
-        // Use adsorption data
-        isAdsorption.current = true;
-        curLeft = adsorption;
-      } else {
-        // Control grid
-        if ((curLeft - startLeft) % grid !== 0) {
-          curLeft = startLeft + grid * Math.round((curLeft - startLeft) / grid);
+        const count = Math.floor(deltaX / distance);
+        let curLeft = left + count * distance;
+
+        // Control adsorption
+        let adsorption = curLeft;
+        let minDis = Number.MAX_SAFE_INTEGER;
+        dragLineData.assistPositions.forEach((item) => {
+          const dis = Math.abs(item - curLeft);
+          if (dis < adsorptionDistance && dis < minDis) adsorption = item;
+          const dis2 = Math.abs(item - (curLeft + width));
+          if (dis2 < adsorptionDistance && dis2 < minDis) adsorption = item - width;
+        });
+
+        if (adsorption !== curLeft) {
+          // Use adsorption data
+          isAdsorption.current = true;
+          curLeft = adsorption;
+        } else {
+          // Control grid
+          if ((curLeft - startLeft) % grid !== 0) {
+            curLeft = startLeft + grid * Math.round((curLeft - startLeft) / grid);
+          }
+          isAdsorption.current = false;
         }
-        isAdsorption.current = false;
-      }
-      deltaX = deltaX % distance;
+        deltaX = deltaX % distance;
 
-      // Control bounds
-      const leftLimit = parserTimeToPixel(actionInfo.ghostAction.minStart || 0, {
-        startLeft,
-        scale,
-        scaleWidth,
-      });
-
-      const rightLimit = Math.min(
-        maxScaleCount * scaleWidth + startLeft, // Limit movement range based on maxScaleCount
-        parserTimeToPixel(actionInfo.ghostAction.maxEnd || Number.MAX_VALUE, {
+        // Control bounds
+        const leftLimit = parserTimeToPixel(currentActionInfo.ghostAction.minStart || 0, {
           startLeft,
           scale,
           scaleWidth,
-        }),
-      );
+        });
 
-      if (curLeft < leftLimit) curLeft = leftLimit;
-      else if (curLeft + width > rightLimit) curLeft = rightLimit - width;
+        const rightLimit = Math.min(
+          maxScaleCount * scaleWidth + startLeft, // Limit movement range based on maxScaleCount
+          parserTimeToPixel(currentActionInfo.ghostAction.maxEnd || Number.MAX_VALUE, {
+            startLeft,
+            scale,
+            scaleWidth,
+          }),
+        );
 
-      const { start, end } = parserTransformToTime({ left: curLeft, width }, { scaleWidth, scale, startLeft });
-      const newAction = { ...actionInfo.action, start, end };
+        if (curLeft < leftLimit) curLeft = leftLimit;
+        else if (curLeft + width > rightLimit) curLeft = rightLimit - width;
 
-      const row = addActionToRow(removeActionFromRow(editorData[actionInfo.rowIndex], newAction.id), newAction);
+        const { start, end } = parserTransformToTime({ left: curLeft, width }, { scaleWidth, scale, startLeft });
+        const newAction = { ...currentActionInfo.action, start, end };
 
-      const data = { action: actionInfo.action, row, start, end };
+        const row = addActionToRow(removeActionFromRow(editorData[currentActionInfo.rowIndex], newAction.id), newAction);
 
-      handleUpdateDragLine(data);
+        const data = { action: currentActionInfo.action, row, start, end };
 
-      // Check if the movement is valid
-      if (onActionMoving) {
-        const result = onActionMoving(data);
-        if (result === false) return;
-      }
+        // Check if the movement is valid
+        if (onActionMoving) {
+          const result = onActionMoving(data);
+          if (result === false) return prev;
+        }
 
-      setEditorState((prev) => ({
-        ...prev,
-        actionInfo: {
-          ...actionInfo,
-          ghostAction: {
-            ...actionInfo.ghostAction,
-            start,
-            end,
+        // Side effects outside of state update
+        handleUpdateDragLine(data);
+        handleScaleCount(left, width);
+
+        // Return updated state
+        return {
+          ...prev,
+          actionInfo: {
+            ...currentActionInfo,
+            ghostAction: {
+              ...currentActionInfo.ghostAction,
+              start,
+              end,
+            },
           },
-        },
-      }));
-      handleScaleCount(left, width);
+        };
+      });
     },
-    [actionInfo, startLeft, scale, scaleWidth, onActionMoving, scaleSplitCount, gridSnap, dragLineData, maxScaleCount, editorData, handleScaleCount, handleUpdateDragLine],
+    [startLeft, scale, scaleWidth, onActionMoving, scaleSplitCount, gridSnap, dragLineData, maxScaleCount, editorData, handleUpdateDragLine],
   );
 
-  const onDragStart = useCallback(
-    (action: TimelineAction, row: TimelineRow, clientX: number, clientY: number, rowIndex: number) => {
-      setEditorState((prevState) => ({
-        tracks: prevState.tracks,
-        actionInfo: {
-          ghostAction: {
-            ...action,
-            id: action.id + '-ghost',
-          },
-          action: {
-            ...action,
-          },
-          ghostRow: row,
-          row: row,
-          rowIndex,
-          ghostRowIndex: rowIndex,
-          dragInfo: {
-            startX: clientX,
-            startY: clientY,
-          },
+  const onDragStart = useCallback((action: TimelineAction, row: TimelineRow, clientX: number, clientY: number, rowIndex: number) => {
+    setEditorState((prevState) => ({
+      tracks: prevState.tracks,
+      actionInfo: {
+        ghostAction: {
+          ...action,
+          id: action.id + '-ghost',
         },
-      }));
-    },
-    [startLeft, scale, scaleWidth, maxScaleCount],
-  );
+        action: {
+          ...action,
+        },
+        ghostRow: row,
+        row: row,
+        rowIndex,
+        ghostRowIndex: rowIndex,
+        dragInfo: {
+          startX: clientX,
+          startY: clientY,
+        },
+      },
+    }));
+  }, []);
 
   const handleMouseUp = useCallback(
     (_: React.MouseEvent<HTMLDivElement>) => {
@@ -350,16 +360,18 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
       // Find the target row
       const targetRowIndex = actionInfo.rowIndex;
 
-      // Update the action with new start and end times
-      const origAction = actionInfo.action;
-      origAction.start = actionInfo.ghostAction.start;
-      origAction.end = actionInfo.ghostAction.end;
+      // Create a new action object with updated times instead of mutating
+      const updatedAction = {
+        ...actionInfo.action,
+        start: actionInfo.ghostAction.start,
+        end: actionInfo.ghostAction.end,
+      };
 
       // Remove the action from the original row
       updatedEditorData[origRowIndex] = removeActionFromRow(updatedEditorData[origRowIndex], actionInfo.action.id);
 
       // Add the action to the target row
-      updatedEditorData[targetRowIndex] = addActionToRow(updatedEditorData[targetRowIndex], origAction);
+      updatedEditorData[targetRowIndex] = addActionToRow(updatedEditorData[targetRowIndex], updatedAction);
 
       // Update the editor data
       setEditorData(updatedEditorData);
@@ -367,10 +379,10 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
       // Execute callback
       if (onActionMoveEnd)
         onActionMoveEnd({
-          action: origAction,
+          action: updatedAction,
           row: actionInfo.ghostRow,
-          start: origAction.start,
-          end: origAction.end,
+          start: updatedAction.start,
+          end: updatedAction.end,
         });
     },
     [actionInfo, editorData, setEditorData, disposeDragLine, onActionMoveEnd],
@@ -379,6 +391,10 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
   /** Get the rendering content for each cell */
   const cellRenderer: GridCellRenderer = ({ rowIndex, key, style }) => {
     const row = editorData[rowIndex]; // Row data
+
+    if (!row) {
+      return null; // Return null if row doesn't exist
+    }
 
     return (
       <EditRow
@@ -434,7 +450,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
   }, [scrollTop, scrollLeft]);
 
   useEffect(() => {
-    gridRef.current.recomputeGridSize();
+    gridRef.current?.recomputeGridSize();
   }, [editorData]);
 
   return (
