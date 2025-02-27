@@ -2323,7 +2323,10 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
     _onActionResizeEnd = props.onActionResizeEnd,
     _onActionResizeStart = props.onActionResizeStart,
     _onActionResizing = props.onActionResizing,
-    setEditorData = props.setEditorData;
+    setEditorData = props.setEditorData,
+    gridSnap = props.gridSnap,
+    scaleSplitCount = props.scaleSplitCount,
+    setScaleCount = props.setScaleCount;
   var _useDragLine = useDragLine(),
     dragLineData = _useDragLine.dragLineData,
     initDragLine = _useDragLine.initDragLine,
@@ -2334,6 +2337,7 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
   var editAreaRef = useRef();
   var gridRef = useRef();
   var heightRef = useRef(-1);
+  var isAdsorption = useRef(false);
   // Combined state for tracks and ghost action
   var _useState = useState({
       tracks: editorData,
@@ -2427,6 +2431,15 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
       };
     });
   }, [actionInfo, tracks, _onActionMoving, editorData]);
+  /** Calculate scale count */
+  var handleScaleCount = useCallback(function (left, width) {
+    var curScaleCount = getScaleCountByPixel(left + width, {
+      startLeft: startLeft,
+      scaleCount: scaleCount,
+      scaleWidth: scaleWidth
+    });
+    if (curScaleCount !== scaleCount) setScaleCount(curScaleCount);
+  }, [setScaleCount]);
   var handleMouseMove = useCallback(function (e) {
     if (!actionInfo) return;
     var _parserTimeToTransfor = parserTimeToTransform({
@@ -2440,10 +2453,34 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
       left = _parserTimeToTransfor.left,
       width = _parserTimeToTransfor.width;
     var deltaX = e.clientX - actionInfo.dragInfo.startX;
-    // TODO: snap the value
-    var distance = DEFAULT_MOVE_GRID;
+    var gridSize = scaleWidth / scaleSplitCount;
+    var adsorptionDistance = gridSnap ? Math.max((gridSize || DEFAULT_MOVE_GRID) / 2, DEFAULT_ADSORPTION_DISTANCE) : DEFAULT_ADSORPTION_DISTANCE;
+    var grid = gridSnap && gridSize || DEFAULT_MOVE_GRID;
+    var distance = isAdsorption.current ? adsorptionDistance : grid;
+    if (Math.abs(deltaX) < distance) return;
     var count = Math.floor(deltaX / distance);
     var curLeft = left + count * distance;
+    // Control adsorption
+    var adsorption = curLeft;
+    var minDis = Number.MAX_SAFE_INTEGER;
+    dragLineData.assistPositions.forEach(function (item) {
+      var dis = Math.abs(item - curLeft);
+      if (dis < adsorptionDistance && dis < minDis) adsorption = item;
+      var dis2 = Math.abs(item - (curLeft + width));
+      if (dis2 < adsorptionDistance && dis2 < minDis) adsorption = item - width;
+    });
+    if (adsorption !== curLeft) {
+      // Use adsorption data
+      isAdsorption.current = true;
+      curLeft = adsorption;
+    } else {
+      // Control grid
+      if ((curLeft - startLeft) % grid !== 0) {
+        curLeft = startLeft + grid * Math.round((curLeft - startLeft) / grid);
+      }
+      isAdsorption.current = false;
+    }
+    deltaX = deltaX % distance;
     // Control bounds
     var leftLimit = actionInfo.dragInfo.leftLimit;
     var rightLimit = actionInfo.dragInfo.rightLimit;
@@ -2485,8 +2522,8 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
         })
       });
     });
-    //handleScaleCount(left, width);
-  }, [actionInfo, startLeft, scale, scaleWidth, _onActionMoving]);
+    handleScaleCount(left, width);
+  }, [actionInfo, startLeft, scale, scaleWidth, _onActionMoving, scaleSplitCount]);
   var _onDragStart = useCallback(function (action, row, clientX, clientY, rowIndex) {
     var leftLimit = parserTimeToPixel(action.minStart || 0, {
       startLeft: startLeft,
@@ -2560,8 +2597,7 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
     return /*#__PURE__*/React.createElement(EditRow, _objectSpread2(_objectSpread2({}, props), {}, {
       style: _objectSpread2(_objectSpread2({}, style), {}, {
         backgroundPositionX: "0, ".concat(startLeft, "px"),
-        backgroundSize: "".concat(startLeft, "px, ").concat(scaleWidth, "px"),
-        background: rowIndex === (actionInfo === null || actionInfo === void 0 ? void 0 : actionInfo.rowIndex) ? "red" : style.background
+        backgroundSize: "".concat(startLeft, "px, ").concat(scaleWidth, "px")
       }),
       areaRef: editAreaRef,
       key: key,
@@ -2577,6 +2613,10 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
           row: row
         });
         _onDragStart(action, row, clientX, clientY, rowIndex);
+        _onActionMoveStart === null || _onActionMoveStart === void 0 ? void 0 : _onActionMoveStart({
+          action: action,
+          row: row
+        });
       },
       dragLineData: dragLineData,
       onActionMoveStart: function onActionMoveStart(data) {
