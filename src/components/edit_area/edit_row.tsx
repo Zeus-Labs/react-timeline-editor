@@ -116,6 +116,7 @@ export const EditRow: FC<EditRowProps> = (props) => {
             areaRef={props.areaRef}
             cursorTime={props.cursorTime}
             timelineWidth={props.timelineWidth}
+            getActionRender={props.getActionRender}
           />
         </div>
       )}
