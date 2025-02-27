@@ -366,10 +366,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
       updatedEditorData[origRowIndex] = removeActionFromRow(updatedEditorData[origRowIndex], actionInfo.action.id);
 
       // Add the action to the target row
-      updatedEditorData[targetRowIndex] = {
-        ...updatedEditorData[targetRowIndex],
-        actions: [...updatedEditorData[targetRowIndex].actions, origAction],
-      };
+      updatedEditorData[targetRowIndex] = addActionToRow(updatedEditorData[targetRowIndex], origAction);
 
       // Update the editor data
       setEditorData(updatedEditorData);
@@ -448,7 +445,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
   }, [editorData]);
 
   return (
-    <div ref={editAreaRef} className={prefix('edit-area')} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={() => updateCurrentRow(-0)}>
+    <div ref={editAreaRef} className={prefix('edit-area')} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
       <AutoSizer>
         {({ width, height }) => {
           // Get total height
