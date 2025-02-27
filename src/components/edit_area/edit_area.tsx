@@ -155,6 +155,17 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
           actions: [...newTracks[targetRowIndex].actions, ghostAction.action],
         };
 
+        const start = ghostAction.action.start;
+        const end = ghostAction.action.end;
+        const data = { action: ghostAction.origAction, row: newTracks[targetRowIndex], start, end };
+
+        // Check if the movement is valid
+        if (onActionMoving) {
+          // TODO: set the correct original row + action in case of movement between rows
+          const result = onActionMoving(data);
+          if (result === false) return;
+        }
+
         // Update the editor state with new tracks and updated ghost action
         setEditorState({
           tracks: newTracks,
@@ -173,7 +184,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
         ghostAction,
       });
     },
-    [ghostAction, tracks],
+    [ghostAction, tracks, onActionMoving],
   );
 
   const handleMouseMove = useCallback(
@@ -200,10 +211,12 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
 
       const { start, end } = parserTransformToTime({ left: curLeft, width }, { scaleWidth, scale, startLeft });
 
+      const data = { action: ghostAction.origAction, row: ghostAction.row, start, end };
+      handleUpdateDragLine(data);
+
       // Check if the movement is valid
       if (onActionMoving) {
-        const data = { action: ghostAction.origAction, row: ghostAction.row, start, end };
-        handleUpdateDragLine(data);
+        // TODO: set the correct original row + action in case of movement between rows
         const result = onActionMoving(data);
         if (result === false) return;
       }
@@ -220,7 +233,6 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
         },
       }));
 
-      //setTransform({ left, width });
       //handleScaleCount(left, width);
     },
     [ghostAction, startLeft, scale, scaleWidth],
@@ -269,6 +281,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
   const handleMouseUp = useCallback(
     (_: React.MouseEvent<HTMLDivElement>) => {
       if (!ghostAction) return;
+      disposeDragLine();
 
       // Create a deep copy of the editor data to avoid direct mutations
       const updatedEditorData = [...editorData];
@@ -279,7 +292,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
       const targetRowIndex = ghostAction.rowIndex;
 
       // Update the action with new start and end times
-      const origAction = ghostAction.action;
+      const origAction = ghostAction.origAction;
       origAction.start = ghostAction.action.start;
       origAction.end = ghostAction.action.end;
 
@@ -329,6 +342,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
         ghostAction={ghostAction?.rowIndex === rowIndex ? ghostAction?.action : undefined}
         onMouseEnter={(row) => updateCurrentRow(rowIndex, row)}
         onDragStart={(action: TimelineAction, row: TimelineRow, clientX: number, clientY: number) => {
+          handleInitDragLine({ action, row });
           onDragStart(action, row, clientX, clientY, rowIndex);
         }}
         dragLineData={dragLineData}
