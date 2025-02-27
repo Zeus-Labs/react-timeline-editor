@@ -2491,8 +2491,18 @@ var EditArea = /*#__PURE__*/React__default['default'].forwardRef(function (props
     }
     deltaX = deltaX % distance;
     // Control bounds
-    var leftLimit = actionInfo.dragInfo.leftLimit;
-    var rightLimit = actionInfo.dragInfo.rightLimit;
+    var leftLimit = parserTimeToPixel(actionInfo.ghostAction.minStart || 0, {
+      startLeft: startLeft,
+      scale: scale,
+      scaleWidth: scaleWidth
+    });
+    var rightLimit = Math.min(maxScaleCount * scaleWidth + startLeft,
+    // Limit movement range based on maxScaleCount
+    parserTimeToPixel(actionInfo.ghostAction.maxEnd || Number.MAX_VALUE, {
+      startLeft: startLeft,
+      scale: scale,
+      scaleWidth: scaleWidth
+    }));
     if (curLeft < leftLimit) curLeft = leftLimit;else if (curLeft + width > rightLimit) curLeft = rightLimit - width;
     var _parserTransformToTim = parserTransformToTime({
         left: curLeft,
@@ -2532,20 +2542,8 @@ var EditArea = /*#__PURE__*/React__default['default'].forwardRef(function (props
       });
     });
     handleScaleCount(left, width);
-  }, [actionInfo, startLeft, scale, scaleWidth, _onActionMoving, scaleSplitCount, gridSnap, dragLineData, editorData, handleScaleCount, handleUpdateDragLine]);
+  }, [actionInfo, startLeft, scale, scaleWidth, _onActionMoving, scaleSplitCount, gridSnap, dragLineData, maxScaleCount, editorData, handleScaleCount, handleUpdateDragLine]);
   var _onDragStart = React.useCallback(function (action, row, clientX, clientY, rowIndex) {
-    var leftLimit = parserTimeToPixel(action.minStart || 0, {
-      startLeft: startLeft,
-      scale: scale,
-      scaleWidth: scaleWidth
-    });
-    var rightLimit = Math.min(maxScaleCount * scaleWidth + startLeft,
-    // Limit movement range based on maxScaleCount
-    parserTimeToPixel(action.maxEnd || Number.MAX_VALUE, {
-      startLeft: startLeft,
-      scale: scale,
-      scaleWidth: scaleWidth
-    }));
     setEditorState(function (prevState) {
       return {
         tracks: prevState.tracks,
@@ -2560,9 +2558,7 @@ var EditArea = /*#__PURE__*/React__default['default'].forwardRef(function (props
           ghostRowIndex: rowIndex,
           dragInfo: {
             startX: clientX,
-            startY: clientY,
-            rightLimit: rightLimit,
-            leftLimit: leftLimit
+            startY: clientY
           }
         }
       };
