@@ -1990,7 +1990,7 @@ var EditAction = function EditAction(_ref) {
     deltaScrollLeft: deltaScrollLeft
   }, /*#__PURE__*/React__default['default'].createElement("div", {
     onMouseDown: function onMouseDown(e) {
-      if (disableDrag) return;
+      if (!movable || disableDrag) return;
       onDragStart === null || onDragStart === void 0 ? void 0 : onDragStart(action, row, e.clientX, e.clientY);
     },
     onClick: function onClick(e) {
@@ -2221,7 +2221,7 @@ function useDragLine() {
     if (!hideCursor) positions.push(cursorLeft);
     return positions;
   };
-  /** 获取当前移动标记 */
+  /** Get current movement markers */
   var defaultGetMovePosition = function defaultGetMovePosition(data) {
     var start = data.start,
       end = data.end,
@@ -2281,10 +2281,41 @@ function useDragLine() {
   };
 }
 
+/**
+ * Helper function to remove an action from a row
+ * @param row The row to remove the action from
+ * @param actionId The ID of the action to remove
+ * @returns A new row with the action removed
+ */
+var removeActionFromRow = function removeActionFromRow(row, actionId) {
+  return _objectSpread2(_objectSpread2({}, row), {}, {
+    actions: row.actions.filter(function (action) {
+      return action.id !== actionId;
+    })
+  });
+};
+/**
+ * Helper function to add an action to a row
+ * @param row The row to add the action to
+ * @param action The action to add
+ * @returns A new row with the action added
+ */
+var addActionToRow = function addActionToRow(row, action) {
+  return _objectSpread2(_objectSpread2({}, row), {}, {
+    actions: [].concat(_toConsumableArray(row.actions), [action])
+  });
+};
+var actionUpdateTimes = function actionUpdateTimes(actionInfo) {
+  return _objectSpread2(_objectSpread2({}, actionInfo.action), {}, {
+    start: actionInfo.ghostAction.start,
+    end: actionInfo.ghostAction.end
+  });
+};
 var EditArea = /*#__PURE__*/React__default['default'].forwardRef(function (props, ref) {
   var editorData = props.editorData,
     _rowHeight = props.rowHeight,
     scaleWidth = props.scaleWidth,
+    maxScaleCount = props.maxScaleCount,
     scaleCount = props.scaleCount,
     startLeft = props.startLeft,
     scrollLeft = props.scrollLeft,
@@ -2315,18 +2346,18 @@ var EditArea = /*#__PURE__*/React__default['default'].forwardRef(function (props
   // Combined state for tracks and ghost action
   var _useState = React.useState({
       tracks: editorData,
-      ghostAction: null
+      actionInfo: null
     }),
     _useState2 = _slicedToArray(_useState, 2),
     editorState = _useState2[0],
     setEditorState = _useState2[1];
   // Destructure for easier access
   var tracks = editorState.tracks,
-    ghostAction = editorState.ghostAction;
+    actionInfo = editorState.actionInfo;
   React.useEffect(function () {
     setEditorState({
       tracks: editorData,
-      ghostAction: null
+      actionInfo: null
     });
   }, [editorData]);
   // ref data
@@ -2377,44 +2408,39 @@ var EditArea = /*#__PURE__*/React__default['default'].forwardRef(function (props
       });
     }
   };
-  var updateCurrentRow = React.useCallback(function (rowIndex, row) {
-    if (!ghostAction) return;
-    // Create a copy of the tracks to modify
-    var newTracks = _toConsumableArray(tracks);
-    // Remove ghost action from its original row
-    var sourceRow = newTracks[ghostAction.rowIndex];
-    newTracks[ghostAction.rowIndex] = _objectSpread2(_objectSpread2({}, sourceRow), {}, {
-      actions: sourceRow.actions.filter(function (a) {
-        return a.id !== ghostAction.action.id;
-      })
-    });
-    // If a target row is provided and it's different from the source row, add the ghost action to it
-    if (row && row.id !== ghostAction.row.id) {
-      var targetRowIndex = rowIndex;
-      newTracks[targetRowIndex] = _objectSpread2(_objectSpread2({}, newTracks[targetRowIndex]), {}, {
-        actions: [].concat(_toConsumableArray(newTracks[targetRowIndex].actions), [ghostAction.action])
-      });
-      // Update the editor state with new tracks and updated ghost action
-      setEditorState({
-        tracks: newTracks,
-        ghostAction: _objectSpread2(_objectSpread2({}, ghostAction), {}, {
-          row: row,
-          rowIndex: rowIndex
-        })
-      });
-      return;
+  var updateCurrentRow = React.useCallback(function (targetRowIndex, row) {
+    // only execute when row changes
+    if (!actionInfo || !row || (row === null || row === void 0 ? void 0 : row.id) === actionInfo.ghostRow.id) return;
+    var action = actionUpdateTimes(actionInfo);
+    var data = {
+      // set the original action with updated times
+      action: action,
+      row: addActionToRow(editorData[targetRowIndex], action),
+      // use the times of the ghost action
+      start: actionInfo.ghostAction.start,
+      end: actionInfo.ghostAction.end
+    };
+    // Check if the movement is valid
+    if (_onActionMoving) {
+      var result = _onActionMoving(data);
+      if (result === false) return;
     }
-    // Just update the tracks if we're not changing rows
-    setEditorState({
-      tracks: newTracks,
-      ghostAction: ghostAction
+    // Update the editor state with new tracks and updated ghost action
+    setEditorState(function (prev) {
+      return {
+        tracks: prev.tracks,
+        actionInfo: _objectSpread2(_objectSpread2({}, actionInfo), {}, {
+          ghostRow: row,
+          rowIndex: targetRowIndex
+        })
+      };
     });
-  }, [ghostAction, tracks]);
+  }, [actionInfo, tracks, _onActionMoving, editorData]);
   var handleMouseMove = React.useCallback(function (e) {
-    if (!ghostAction) return;
+    if (!actionInfo) return;
     var _parserTimeToTransfor = parserTimeToTransform({
-        start: ghostAction.origAction.start,
-        end: ghostAction.origAction.end
+        start: actionInfo.action.start,
+        end: actionInfo.action.end
       }, {
         startLeft: startLeft,
         scale: scale,
@@ -2422,11 +2448,15 @@ var EditArea = /*#__PURE__*/React__default['default'].forwardRef(function (props
       }),
       left = _parserTimeToTransfor.left,
       width = _parserTimeToTransfor.width;
-    var deltaX = e.clientX - ghostAction.dragInfo.startX;
+    var deltaX = e.clientX - actionInfo.dragInfo.startX;
     // TODO: snap the value
     var distance = DEFAULT_MOVE_GRID;
     var count = Math.floor(deltaX / distance);
     var curLeft = left + count * distance;
+    // Control bounds
+    var leftLimit = actionInfo.dragInfo.leftLimit;
+    var rightLimit = actionInfo.dragInfo.rightLimit;
+    if (curLeft < leftLimit) curLeft = leftLimit;else if (curLeft + width > rightLimit) curLeft = rightLimit - width;
     var _parserTransformToTim = parserTransformToTime({
         left: curLeft,
         width: width
@@ -2437,68 +2467,85 @@ var EditArea = /*#__PURE__*/React__default['default'].forwardRef(function (props
       }),
       start = _parserTransformToTim.start,
       end = _parserTransformToTim.end;
+    var newAction = _objectSpread2(_objectSpread2({}, actionInfo.action), {}, {
+      start: start,
+      end: end
+    });
+    var row = addActionToRow(removeActionFromRow(editorData[actionInfo.rowIndex], newAction.id), newAction);
+    var data = {
+      action: actionInfo.action,
+      row: row,
+      start: start,
+      end: end
+    };
+    handleUpdateDragLine(data);
     // Check if the movement is valid
     if (_onActionMoving) {
-      var result = _onActionMoving({
-        action: ghostAction.origAction,
-        row: ghostAction.row,
-        start: start,
-        end: end
-      });
-      if (result === false) return false;
+      var result = _onActionMoving(data);
+      if (result === false) return;
     }
     setEditorState(function (prev) {
       return _objectSpread2(_objectSpread2({}, prev), {}, {
-        ghostAction: _objectSpread2(_objectSpread2({}, ghostAction), {}, {
-          action: _objectSpread2(_objectSpread2({}, ghostAction.action), {}, {
+        actionInfo: _objectSpread2(_objectSpread2({}, actionInfo), {}, {
+          ghostAction: _objectSpread2(_objectSpread2({}, actionInfo.ghostAction), {}, {
             start: start,
             end: end
           })
         })
       });
     });
-    //setTransform({ left, width });
     //handleScaleCount(left, width);
-  }, [ghostAction, startLeft, scale, scaleWidth]);
+  }, [actionInfo, startLeft, scale, scaleWidth, _onActionMoving]);
   var _onDragStart = React.useCallback(function (action, row, clientX, clientY, rowIndex) {
+    var leftLimit = parserTimeToPixel(action.minStart || 0, {
+      startLeft: startLeft,
+      scale: scale,
+      scaleWidth: scaleWidth
+    });
+    var rightLimit = Math.min(maxScaleCount * scaleWidth + startLeft,
+    // Limit movement range based on maxScaleCount
+    parserTimeToPixel(action.maxEnd || Number.MAX_VALUE, {
+      startLeft: startLeft,
+      scale: scale,
+      scaleWidth: scaleWidth
+    }));
     setEditorState(function (prevState) {
       return {
         tracks: prevState.tracks,
-        ghostAction: {
-          action: _objectSpread2(_objectSpread2({}, action), {}, {
+        actionInfo: {
+          ghostAction: _objectSpread2(_objectSpread2({}, action), {}, {
             id: action.id + '-ghost'
           }),
-          origAction: _objectSpread2({}, action),
+          action: _objectSpread2({}, action),
+          ghostRow: row,
           row: row,
-          origRow: row,
           rowIndex: rowIndex,
-          origRowIndex: rowIndex,
+          ghostRowIndex: rowIndex,
           dragInfo: {
             startX: clientX,
-            startY: clientY
+            startY: clientY,
+            rightLimit: rightLimit,
+            leftLimit: leftLimit
           }
         }
       };
     });
   }, []);
-  var handleMouseUp = React.useCallback(function (e) {
-    if (!ghostAction) return;
+  var handleMouseUp = React.useCallback(function (_) {
+    if (!actionInfo) return;
+    disposeDragLine();
     // Create a deep copy of the editor data to avoid direct mutations
     var updatedEditorData = _toConsumableArray(editorData);
     // Find the original row and action
-    var origRowIndex = ghostAction.origRowIndex;
+    var origRowIndex = actionInfo.ghostRowIndex;
     // Find the target row
-    var targetRowIndex = ghostAction.rowIndex;
+    var targetRowIndex = actionInfo.rowIndex;
     // Update the action with new start and end times
-    var origAction = ghostAction.action;
-    origAction.start = ghostAction.action.start;
-    origAction.end = ghostAction.action.end;
+    var origAction = actionInfo.action;
+    origAction.start = actionInfo.ghostAction.start;
+    origAction.end = actionInfo.ghostAction.end;
     // Remove the action from the original row
-    updatedEditorData[origRowIndex] = _objectSpread2(_objectSpread2({}, updatedEditorData[origRowIndex]), {}, {
-      actions: updatedEditorData[origRowIndex].actions.filter(function (item) {
-        return item.id !== ghostAction.origAction.id;
-      })
-    });
+    updatedEditorData[origRowIndex] = removeActionFromRow(updatedEditorData[origRowIndex], actionInfo.action.id);
     // Add the action to the target row
     updatedEditorData[targetRowIndex] = _objectSpread2(_objectSpread2({}, updatedEditorData[targetRowIndex]), {}, {
       actions: [].concat(_toConsumableArray(updatedEditorData[targetRowIndex].actions), [origAction])
@@ -2508,11 +2555,11 @@ var EditArea = /*#__PURE__*/React__default['default'].forwardRef(function (props
     // Execute callback
     if (_onActionMoveEnd) _onActionMoveEnd({
       action: origAction,
-      row: ghostAction.row,
+      row: actionInfo.ghostRow,
       start: origAction.start,
       end: origAction.end
     });
-  }, [ghostAction, editorData, setEditorData]);
+  }, [actionInfo, editorData, setEditorData]);
   /** Get the rendering content for each cell */
   var cellRenderer = function cellRenderer(_ref) {
     var rowIndex = _ref.rowIndex,
@@ -2528,11 +2575,15 @@ var EditArea = /*#__PURE__*/React__default['default'].forwardRef(function (props
       key: key,
       rowHeight: (row === null || row === void 0 ? void 0 : row.rowHeight) || _rowHeight,
       rowData: row,
-      ghostAction: (ghostAction === null || ghostAction === void 0 ? void 0 : ghostAction.rowIndex) === rowIndex ? ghostAction === null || ghostAction === void 0 ? void 0 : ghostAction.action : undefined,
+      ghostAction: (actionInfo === null || actionInfo === void 0 ? void 0 : actionInfo.rowIndex) === rowIndex ? actionInfo === null || actionInfo === void 0 ? void 0 : actionInfo.ghostAction : undefined,
       onMouseEnter: function onMouseEnter(row) {
         return updateCurrentRow(rowIndex, row);
       },
       onDragStart: function onDragStart(action, row, clientX, clientY) {
+        handleInitDragLine({
+          action: action,
+          row: row
+        });
         _onDragStart(action, row, clientX, clientY, rowIndex);
       },
       dragLineData: dragLineData,
