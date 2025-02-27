@@ -202,7 +202,7 @@ export const EditAction: FC<EditActionProps> = ({
     >
       <div
         onMouseDown={(e) => {
-          if (disableDrag) return;
+          if (!movable || disableDrag) return;
           onDragStart?.(action, row, e.clientX, e.clientY);
         }}
         onClick={(e) => {
