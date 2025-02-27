@@ -134,7 +134,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
   };
 
   const updateCurrentRow = useCallback(
-    (rowIndex: number, row?: TimelineRow) => {
+    (targetRowIndex: number, row?: TimelineRow) => {
       if (!ghostAction) return;
 
       // Create a copy of the tracks to modify
@@ -149,7 +149,6 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
 
       // If a target row is provided and it's different from the source row, add the ghost action to it
       if (row && row.id !== ghostAction.row.id) {
-        const targetRowIndex = rowIndex;
         newTracks[targetRowIndex] = {
           ...newTracks[targetRowIndex],
           actions: [...newTracks[targetRowIndex].actions, ghostAction.action],
@@ -172,7 +171,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
           ghostAction: {
             ...ghostAction,
             row,
-            rowIndex,
+            rowIndex: targetRowIndex,
           },
         });
         return;
