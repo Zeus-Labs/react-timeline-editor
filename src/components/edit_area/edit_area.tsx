@@ -5,7 +5,7 @@ import { TimelineAction, TimelineRow } from '../../interface/action';
 import { CommonProp } from '../../interface/common_prop';
 import { EditData } from '../../interface/timeline';
 import { prefix } from '../../utils/deal_class_prefix';
-import { parserTimeToPixel, parserTimeToTransform, parserTransformToTime } from '../../utils/deal_data';
+import { parserTimeToPixel, getScaleCountByPixel, parserTimeToTransform, parserTransformToTime } from '../../utils/deal_data';
 import { DragLines } from './drag_lines';
 import './edit_area.less';
 import { EditRow } from './edit_row';
@@ -110,6 +110,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
     setEditorData,
     gridSnap,
     scaleSplitCount,
+    setScaleCount,
   } = props;
   const { dragLineData, initDragLine, updateDragLine, disposeDragLine, defaultGetAssistPosition, defaultGetMovePosition } = useDragLine();
   const editAreaRef = useRef<HTMLDivElement>();
@@ -208,6 +209,19 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
     [actionInfo, tracks, onActionMoving, editorData],
   );
 
+  /** Calculate scale count */
+  const handleScaleCount = useCallback(
+    (left: number, width: number) => {
+      const curScaleCount = getScaleCountByPixel(left + width, {
+        startLeft,
+        scaleCount,
+        scaleWidth,
+      });
+      if (curScaleCount !== scaleCount) setScaleCount(curScaleCount);
+    },
+    [setScaleCount],
+  );
+
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       if (!actionInfo) return;
@@ -282,10 +296,9 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
           },
         },
       }));
-
-      //handleScaleCount(left, width);
+      handleScaleCount(left, width);
     },
-    [actionInfo, startLeft, scale, scaleWidth, onActionMoving],
+    [actionInfo, startLeft, scale, scaleWidth, onActionMoving, scaleSplitCount],
   );
 
   const onDragStart = useCallback((action: TimelineAction, row: TimelineRow, clientX: number, clientY: number, rowIndex: number) => {
