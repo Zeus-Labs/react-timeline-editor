@@ -19,32 +19,12 @@ export type EditRowProps = CommonProp & {
   /** Set scroll left */
   deltaScrollLeft: (scrollLeft: number) => void;
   /** Callback triggered when dragging starts */
-  onDragStart?: (
-    action: TimelineAction,
-    row: TimelineRow,
-    clientX: number,
-    clientY: number,
-  ) => void;
-  onMouseEnter?: (
-    row?: TimelineRow,
-  ) => void;
+  onDragStart?: (action: TimelineAction, row: TimelineRow, clientX: number, clientY: number) => void;
+  onMouseEnter?: (row?: TimelineRow) => void;
 };
 
 export const EditRow: FC<EditRowProps> = (props) => {
-  const {
-    rowData,
-    ghostAction,
-    style = {},
-    onClickRow,
-    onMouseEnter,
-    onDoubleClickRow,
-    onContextMenuRow,
-    areaRef,
-    scrollLeft,
-    startLeft,
-    scale,
-    scaleWidth,
-  } = props;
+  const { rowData, ghostAction, style = {}, onClickRow, onMouseEnter, onDoubleClickRow, onContextMenuRow, areaRef, scrollLeft, startLeft, scale, scaleWidth } = props;
 
   const classNames = ['edit-row'];
   if (rowData?.selected) classNames.push('edit-row-selected');
@@ -115,35 +95,30 @@ export const EditRow: FC<EditRowProps> = (props) => {
         <EditAction key={action.id} {...props} handleTime={handleTime} row={rowData} action={action} />
       ))}
 
-      {ghostAction &&
+      {ghostAction && (
         <div style={{ opacity: 0.5 }}>
           <EditAction
-            key={ghostAction.id + "-ghost"}
+            key={ghostAction.id + '-ghost'}
             handleTime={handleTime}
             row={rowData}
             action={ghostAction}
             disableDrag={true}
-
             editorData={props.editorData}
             effects={props.effects}
-
             scaleCount={props.scaleCount}
             maxScaleCount={props.maxScaleCount}
             setScaleCount={props.setScaleCount}
-
             startLeft={props.startLeft}
             scale={props.scale}
             scaleWidth={props.scaleWidth}
-
             dragLineData={props.dragLineData}
             setEditorData={props.setEditorData}
             areaRef={props.areaRef}
-
             cursorTime={props.cursorTime}
             timelineWidth={props.timelineWidth}
           />
         </div>
-      }
+      )}
     </div>
   );
 };

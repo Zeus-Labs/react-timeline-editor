@@ -19,12 +19,7 @@ export type EditActionProps = CommonProp & {
   /** Set scroll left */
   deltaScrollLeft?: (delta: number) => void;
   /** Callback triggered when dragging starts */
-  onDragStart?: (
-    action: TimelineAction,
-    row: TimelineRow,
-    clientX: number,
-    clientY: number,
-  ) => void;
+  onDragStart?: (action: TimelineAction, row: TimelineRow, clientX: number, clientY: number) => void;
 };
 
 export const EditAction: FC<EditActionProps> = ({
@@ -208,7 +203,7 @@ export const EditAction: FC<EditActionProps> = ({
       <div
         onMouseDown={(e) => {
           if (disableDrag) return;
-          onDragStart?.(action, row, e.clientX, e.clientY)
+          onDragStart?.(action, row, e.clientX, e.clientY);
         }}
         onClick={(e) => {
           let time: number;
@@ -238,12 +233,8 @@ export const EditAction: FC<EditActionProps> = ({
         style={{ height: rowHeight }}
       >
         {getActionRender && getActionRender(nowAction, nowRow)}
-        {flexible && <div
-          onMouseDown={(e) => e.stopPropagation()}
-          className={prefix('action-left-stretch')} />}
-        {flexible && <div
-          onMouseDown={(e) => e.stopPropagation()}
-          className={prefix('action-right-stretch')} />}
+        {flexible && <div onMouseDown={(e) => e.stopPropagation()} className={prefix('action-left-stretch')} />}
+        {flexible && <div onMouseDown={(e) => e.stopPropagation()} className={prefix('action-right-stretch')} />}
       </div>
     </RowDnd>
   );

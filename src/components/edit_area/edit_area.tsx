@@ -55,6 +55,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
     onActionResizeEnd,
     onActionResizeStart,
     onActionResizing,
+    setEditorData,
   } = props;
   const { dragLineData, initDragLine, updateDragLine, disposeDragLine, defaultGetAssistPosition, defaultGetMovePosition } = useDragLine();
   const editAreaRef = useRef<HTMLDivElement>();
@@ -63,21 +64,27 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
 
   // Combined state for tracks and ghost action
   const [editorState, setEditorState] = useState<{
-    tracks: TimelineRow[],
+    tracks: TimelineRow[];
     ghostAction: {
-      action: TimelineAction,
-      orAction: TimelineAction,
-      row: TimelineRow,
-      rowIndex: number,
-      dragInfo: DragInfo
-    } | null
+      action: TimelineAction;
+      origAction: TimelineAction;
+      row: TimelineRow;
+      origRow: TimelineRow;
+      rowIndex: number;
+      origRowIndex: number;
+      dragInfo: DragInfo;
+    } | null;
   }>({
     tracks: editorData,
-    ghostAction: null
+    ghostAction: null,
   });
 
   // Destructure for easier access
   const { tracks, ghostAction } = editorState;
+
+  useEffect(() => {
+    setEditorState({ tracks: editorData, ghostAction: null });
+  }, [editorData]);
 
   // ref data
   useImperativeHandle(ref, () => ({
@@ -123,123 +130,155 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
     }
   };
 
-  const updateCurrentRow = useCallback((rowIndex: number, row?: TimelineRow) => {
-    if (!ghostAction) return;
+  const updateCurrentRow = useCallback(
+    (rowIndex: number, row?: TimelineRow) => {
+      if (!ghostAction) return;
 
-    // Create a copy of the tracks to modify
-    const newTracks = [...tracks];
+      // Create a copy of the tracks to modify
+      const newTracks = [...tracks];
 
-    // Remove ghost action from its original row
-    const sourceRow = newTracks[ghostAction.rowIndex];
-    newTracks[ghostAction.rowIndex] = {
-      ...sourceRow,
-      actions: sourceRow.actions.filter(a => a.id !== ghostAction.action.id)
-    };
-
-    // If a target row is provided and it's different from the source row, add the ghost action to it
-    if (row && row.id !== ghostAction.row.id) {
-      const targetRowIndex = rowIndex;
-      newTracks[targetRowIndex] = {
-        ...newTracks[targetRowIndex],
-        actions: [...newTracks[targetRowIndex].actions, ghostAction.action]
+      // Remove ghost action from its original row
+      const sourceRow = newTracks[ghostAction.rowIndex];
+      newTracks[ghostAction.rowIndex] = {
+        ...sourceRow,
+        actions: sourceRow.actions.filter((a) => a.id !== ghostAction.action.id),
       };
 
-      // Update the editor state with new tracks and updated ghost action
+      // If a target row is provided and it's different from the source row, add the ghost action to it
+      if (row && row.id !== ghostAction.row.id) {
+        const targetRowIndex = rowIndex;
+        newTracks[targetRowIndex] = {
+          ...newTracks[targetRowIndex],
+          actions: [...newTracks[targetRowIndex].actions, ghostAction.action],
+        };
+
+        // Update the editor state with new tracks and updated ghost action
+        setEditorState({
+          tracks: newTracks,
+          ghostAction: {
+            ...ghostAction,
+            row,
+            rowIndex,
+          },
+        });
+        return;
+      }
+
+      // Just update the tracks if we're not changing rows
       setEditorState({
         tracks: newTracks,
+        ghostAction,
+      });
+    },
+    [ghostAction, tracks],
+  );
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!ghostAction) return;
+
+      const { left, width } = parserTimeToTransform({ start: ghostAction.origAction.start, end: ghostAction.origAction.end }, { startLeft, scale, scaleWidth });
+
+      const deltaX = e.clientX - ghostAction.dragInfo.startX;
+
+      // TODO: snap the value
+      const distance = DEFAULT_MOVE_GRID;
+
+      const count = Math.floor(deltaX / distance);
+
+      let curLeft = left + count * distance;
+      const { start, end } = parserTransformToTime({ left: curLeft, width }, { scaleWidth, scale, startLeft });
+
+      // Check if the movement is valid
+      if (onActionMoving) {
+        const result = onActionMoving({ action: ghostAction.origAction, row: ghostAction.row, start, end });
+        if (result === false) return false;
+      }
+
+      setEditorState((prev) => ({
+        ...prev,
         ghostAction: {
           ...ghostAction,
-          row,
-          rowIndex
-        }
-      });
-      return;
-    }
+          action: {
+            ...ghostAction.action,
+            start,
+            end,
+          },
+        },
+      }));
 
-    // Just update the tracks if we're not changing rows
-    setEditorState({
-      tracks: newTracks,
-      ghostAction
-    });
+      //setTransform({ left, width });
+      //handleScaleCount(left, width);
+    },
+    [ghostAction, startLeft, scale, scaleWidth],
+  );
 
-  }, [ghostAction, tracks]);
-
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!ghostAction) return;
-
-    const { left, width } = parserTimeToTransform({ start: ghostAction.orAction.start, end: ghostAction.orAction.end }, { startLeft, scale, scaleWidth });
-
-
-    const deltaX = e.clientX - ghostAction.dragInfo.startX;
-
-    // TODO: snap the value
-    const distance = DEFAULT_MOVE_GRID;
-
-    const count = Math.floor(deltaX / distance);
-
-    //console.log(curLeft, start, end, ghostAction.dragInfo.startX);
-    let curLeft = left + count * distance;
-    const { start, end } = parserTransformToTime({ left: curLeft, width }, { scaleWidth, scale, startLeft });
-
-    // Check if the movement is valid
-    if (onActionMoving) {
-      const result = onActionMoving({ action: ghostAction.orAction, row: ghostAction.row, start, end });
-      if (result === false) return false;
-    }
-
-    setEditorState((prev) => ({
-      ...prev,
-      ghostAction: {
-        ...ghostAction,
-        action: {
-          ...ghostAction.action,
-          start,
-          end
-        }
-      }
-    }));
-
-    //setTransform({ left, width });
-    //handleScaleCount(left, width);
-  }, [ghostAction, startLeft, scale, scaleWidth]);
-
-  const onDragStart = useCallback((
-    action: TimelineAction,
-    row: TimelineRow,
-    clientX: number,
-    clientY: number,
-    rowIndex: number
-  ) => {
-    console.log("on drag start edit row", { action, row, clientX, clientY });
-
-    setEditorState(prevState => ({
+  const onDragStart = useCallback((action: TimelineAction, row: TimelineRow, clientX: number, clientY: number, rowIndex: number) => {
+    setEditorState((prevState) => ({
       tracks: prevState.tracks,
       ghostAction: {
         action: {
           ...action,
-          id: action.id + "-ghost",
+          id: action.id + '-ghost',
         },
-        orAction: {
+        origAction: {
           ...action,
         },
         row,
+        origRow: row,
         rowIndex,
+        origRowIndex: rowIndex,
         dragInfo: {
           startX: clientX,
-          startY: clientY
-        }
-      }
+          startY: clientY,
+        },
+      },
     }));
   }, []);
 
+  const handleMouseUp = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!ghostAction) return;
 
-  const handleMouseUp = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    console.log("handle mouse up moved", { clientX: e.clientX, clientY: e.clientY });
-    setEditorState(prevState => ({
-      tracks: prevState.tracks,
-      ghostAction: null
-    }));
-  }, []);
+      // Create a deep copy of the editor data to avoid direct mutations
+      const updatedEditorData = [...editorData];
+
+      // Find the original row and action
+      const origRowIndex = ghostAction.origRowIndex;
+      // Find the target row
+      const targetRowIndex = ghostAction.rowIndex;
+
+      // Update the action with new start and end times
+      const origAction = ghostAction.action;
+      origAction.start = ghostAction.action.start;
+      origAction.end = ghostAction.action.end;
+
+      // Remove the action from the original row
+      updatedEditorData[origRowIndex] = {
+        ...updatedEditorData[origRowIndex],
+        actions: updatedEditorData[origRowIndex].actions.filter((item) => item.id !== ghostAction.origAction.id),
+      };
+
+      // Add the action to the target row
+      updatedEditorData[targetRowIndex] = {
+        ...updatedEditorData[targetRowIndex],
+        actions: [...updatedEditorData[targetRowIndex].actions, origAction],
+      };
+
+      // Update the editor data
+      setEditorData(updatedEditorData);
+
+      // Execute callback
+      if (onActionMoveEnd)
+        onActionMoveEnd({
+          action: origAction,
+          row: ghostAction.row,
+          start: origAction.start,
+          end: origAction.end,
+        });
+    },
+    [ghostAction, editorData, setEditorData],
+  );
 
   /** Get the rendering content for each cell */
   const cellRenderer: GridCellRenderer = ({ rowIndex, key, style }) => {
@@ -301,13 +340,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
   }, [editorData]);
 
   return (
-    <div
-      ref={editAreaRef}
-      className={prefix('edit-area')}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={() => updateCurrentRow(-0)}
-    >
+    <div ref={editAreaRef} className={prefix('edit-area')} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={() => updateCurrentRow(-0)}>
       <AutoSizer>
         {({ width, height }) => {
           // Get total height
