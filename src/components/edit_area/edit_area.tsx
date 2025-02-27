@@ -14,6 +14,8 @@ import { useDragLine } from './hooks/use_drag_line';
 interface DragInfo {
   startX: number;
   startY: number;
+  rightLimit: number;
+  leftLimit: number;
 }
 
 export type EditAreaProps = CommonProp & {
@@ -39,6 +41,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
     editorData,
     rowHeight,
     scaleWidth,
+    maxScaleCount,
     scaleCount,
     startLeft,
     scrollLeft,
@@ -187,12 +190,22 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
       const count = Math.floor(deltaX / distance);
 
       let curLeft = left + count * distance;
+
+      // Control bounds
+      const leftLimit = ghostAction.dragInfo.leftLimit;
+      const rightLimit = ghostAction.dragInfo.rightLimit;
+
+      if (curLeft < leftLimit) curLeft = leftLimit;
+      else if (curLeft + width > rightLimit) curLeft = rightLimit - width;
+
       const { start, end } = parserTransformToTime({ left: curLeft, width }, { scaleWidth, scale, startLeft });
 
       // Check if the movement is valid
       if (onActionMoving) {
-        const result = onActionMoving({ action: ghostAction.origAction, row: ghostAction.row, start, end });
-        if (result === false) return false;
+        const data = { action: ghostAction.origAction, row: ghostAction.row, start, end };
+        handleUpdateDragLine(data);
+        const result = onActionMoving(data);
+        if (result === false) return;
       }
 
       setEditorState((prev) => ({
@@ -214,6 +227,21 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
   );
 
   const onDragStart = useCallback((action: TimelineAction, row: TimelineRow, clientX: number, clientY: number, rowIndex: number) => {
+    const leftLimit = parserTimeToPixel(action.minStart || 0, {
+      startLeft,
+      scale,
+      scaleWidth,
+    });
+
+    const rightLimit = Math.min(
+      maxScaleCount * scaleWidth + startLeft, // Limit movement range based on maxScaleCount
+      parserTimeToPixel(action.maxEnd || Number.MAX_VALUE, {
+        startLeft,
+        scale,
+        scaleWidth,
+      }),
+    );
+
     setEditorState((prevState) => ({
       tracks: prevState.tracks,
       ghostAction: {
@@ -231,13 +259,15 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
         dragInfo: {
           startX: clientX,
           startY: clientY,
+          rightLimit,
+          leftLimit,
         },
       },
     }));
   }, []);
 
   const handleMouseUp = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
+    (_: React.MouseEvent<HTMLDivElement>) => {
       if (!ghostAction) return;
 
       // Create a deep copy of the editor data to avoid direct mutations
