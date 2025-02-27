@@ -17,7 +17,7 @@ export type EditAreaProps = CommonProp & {
 };
 /** Edit area ref data */
 export interface EditAreaState {
-    domRef: React.MutableRefObject<HTMLDivElement>;
+    domRef: React.RefObject<HTMLDivElement>;
 }
 export declare const EditArea: React.ForwardRefExoticComponent<CommonProp & {
     /** Distance scrolled from the left */

@@ -2334,8 +2334,8 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
     disposeDragLine = _useDragLine.disposeDragLine,
     defaultGetAssistPosition = _useDragLine.defaultGetAssistPosition,
     defaultGetMovePosition = _useDragLine.defaultGetMovePosition;
-  var editAreaRef = useRef();
-  var gridRef = useRef();
+  var editAreaRef = useRef(null);
+  var gridRef = useRef(null);
   var heightRef = useRef(-1);
   var isAdsorption = useRef(false);
   // Combined state for tracks and ghost action
@@ -2404,136 +2404,144 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
     }
   };
   var updateCurrentRow = useCallback(function (targetRowIndex, row) {
-    // only execute when row changes
-    if (!actionInfo || !row || (row === null || row === void 0 ? void 0 : row.id) === actionInfo.ghostRow.id) return;
-    var action = actionUpdateTimes(actionInfo);
-    var data = {
-      // set the original action with updated times
-      action: action,
-      row: addActionToRow(editorData[targetRowIndex], action),
-      // use the times of the ghost action
-      start: actionInfo.ghostAction.start,
-      end: actionInfo.ghostAction.end
-    };
-    // Check if the movement is valid
-    if (_onActionMoving) {
-      var result = _onActionMoving(data);
-      if (result === false) return;
-    }
-    // Update the editor state with new tracks and updated ghost action
+    if (!row) return;
     setEditorState(function (prev) {
+      var currentActionInfo = prev.actionInfo;
+      // only execute when row changes and actionInfo exists
+      if (!currentActionInfo || row.id === currentActionInfo.ghostRow.id) return prev;
+      var action = actionUpdateTimes(currentActionInfo);
+      var data = {
+        // set the original action with updated times
+        action: action,
+        row: addActionToRow(editorData[targetRowIndex], action),
+        // use the times of the ghost action
+        start: currentActionInfo.ghostAction.start,
+        end: currentActionInfo.ghostAction.end
+      };
+      // Check if the movement is valid
+      if (_onActionMoving) {
+        var result = _onActionMoving(data);
+        if (result === false) return prev;
+      }
+      // Return updated state with new tracks and updated ghost action
       return {
         tracks: prev.tracks,
-        actionInfo: _objectSpread2(_objectSpread2({}, actionInfo), {}, {
+        actionInfo: _objectSpread2(_objectSpread2({}, currentActionInfo), {}, {
           ghostRow: row,
           rowIndex: targetRowIndex
         })
       };
     });
-  }, [actionInfo, _onActionMoving, editorData]);
+  }, [editorData, _onActionMoving]);
   /** Calculate scale count */
-  var handleScaleCount = useCallback(function (left, width) {
+  var handleScaleCount = function handleScaleCount(left, width) {
     var curScaleCount = getScaleCountByPixel(left + width, {
       startLeft: startLeft,
       scaleCount: scaleCount,
       scaleWidth: scaleWidth
     });
     if (curScaleCount !== scaleCount) setScaleCount(curScaleCount);
-  }, [setScaleCount, startLeft, scaleCount, scaleWidth]);
+  };
   var handleMouseMove = useCallback(function (e) {
-    if (!actionInfo) return;
-    var _parserTimeToTransfor = parserTimeToTransform({
-        start: actionInfo.action.start,
-        end: actionInfo.action.end
-      }, {
+    // Use a function to get the latest state
+    setEditorState(function (prev) {
+      var currentActionInfo = prev.actionInfo;
+      // Early return if no action info
+      if (!currentActionInfo) return prev;
+      var _parserTimeToTransfor = parserTimeToTransform({
+          start: currentActionInfo.action.start,
+          end: currentActionInfo.action.end
+        }, {
+          startLeft: startLeft,
+          scale: scale,
+          scaleWidth: scaleWidth
+        }),
+        left = _parserTimeToTransfor.left,
+        width = _parserTimeToTransfor.width;
+      var deltaX = e.clientX - currentActionInfo.dragInfo.startX;
+      var gridSize = scaleWidth / scaleSplitCount;
+      var adsorptionDistance = gridSnap ? Math.max((gridSize || DEFAULT_MOVE_GRID) / 2, DEFAULT_ADSORPTION_DISTANCE) : DEFAULT_ADSORPTION_DISTANCE;
+      var grid = gridSnap && gridSize || DEFAULT_MOVE_GRID;
+      var distance = isAdsorption.current ? adsorptionDistance : grid;
+      // If movement is too small, don't update
+      if (Math.abs(deltaX) < distance) return prev;
+      var count = Math.floor(deltaX / distance);
+      var curLeft = left + count * distance;
+      // Control adsorption
+      var adsorption = curLeft;
+      var minDis = Number.MAX_SAFE_INTEGER;
+      dragLineData.assistPositions.forEach(function (item) {
+        var dis = Math.abs(item - curLeft);
+        if (dis < adsorptionDistance && dis < minDis) adsorption = item;
+        var dis2 = Math.abs(item - (curLeft + width));
+        if (dis2 < adsorptionDistance && dis2 < minDis) adsorption = item - width;
+      });
+      if (adsorption !== curLeft) {
+        // Use adsorption data
+        isAdsorption.current = true;
+        curLeft = adsorption;
+      } else {
+        // Control grid
+        if ((curLeft - startLeft) % grid !== 0) {
+          curLeft = startLeft + grid * Math.round((curLeft - startLeft) / grid);
+        }
+        isAdsorption.current = false;
+      }
+      deltaX = deltaX % distance;
+      // Control bounds
+      var leftLimit = parserTimeToPixel(currentActionInfo.ghostAction.minStart || 0, {
         startLeft: startLeft,
         scale: scale,
         scaleWidth: scaleWidth
-      }),
-      left = _parserTimeToTransfor.left,
-      width = _parserTimeToTransfor.width;
-    var deltaX = e.clientX - actionInfo.dragInfo.startX;
-    var gridSize = scaleWidth / scaleSplitCount;
-    var adsorptionDistance = gridSnap ? Math.max((gridSize || DEFAULT_MOVE_GRID) / 2, DEFAULT_ADSORPTION_DISTANCE) : DEFAULT_ADSORPTION_DISTANCE;
-    var grid = gridSnap && gridSize || DEFAULT_MOVE_GRID;
-    var distance = isAdsorption.current ? adsorptionDistance : grid;
-    if (Math.abs(deltaX) < distance) return;
-    var count = Math.floor(deltaX / distance);
-    var curLeft = left + count * distance;
-    // Control adsorption
-    var adsorption = curLeft;
-    var minDis = Number.MAX_SAFE_INTEGER;
-    dragLineData.assistPositions.forEach(function (item) {
-      var dis = Math.abs(item - curLeft);
-      if (dis < adsorptionDistance && dis < minDis) adsorption = item;
-      var dis2 = Math.abs(item - (curLeft + width));
-      if (dis2 < adsorptionDistance && dis2 < minDis) adsorption = item - width;
-    });
-    if (adsorption !== curLeft) {
-      // Use adsorption data
-      isAdsorption.current = true;
-      curLeft = adsorption;
-    } else {
-      // Control grid
-      if ((curLeft - startLeft) % grid !== 0) {
-        curLeft = startLeft + grid * Math.round((curLeft - startLeft) / grid);
-      }
-      isAdsorption.current = false;
-    }
-    deltaX = deltaX % distance;
-    // Control bounds
-    var leftLimit = parserTimeToPixel(actionInfo.ghostAction.minStart || 0, {
-      startLeft: startLeft,
-      scale: scale,
-      scaleWidth: scaleWidth
-    });
-    var rightLimit = Math.min(maxScaleCount * scaleWidth + startLeft,
-    // Limit movement range based on maxScaleCount
-    parserTimeToPixel(actionInfo.ghostAction.maxEnd || Number.MAX_VALUE, {
-      startLeft: startLeft,
-      scale: scale,
-      scaleWidth: scaleWidth
-    }));
-    if (curLeft < leftLimit) curLeft = leftLimit;else if (curLeft + width > rightLimit) curLeft = rightLimit - width;
-    var _parserTransformToTim = parserTransformToTime({
-        left: curLeft,
-        width: width
-      }, {
-        scaleWidth: scaleWidth,
+      });
+      var rightLimit = Math.min(maxScaleCount * scaleWidth + startLeft,
+      // Limit movement range based on maxScaleCount
+      parserTimeToPixel(currentActionInfo.ghostAction.maxEnd || Number.MAX_VALUE, {
+        startLeft: startLeft,
         scale: scale,
-        startLeft: startLeft
-      }),
-      start = _parserTransformToTim.start,
-      end = _parserTransformToTim.end;
-    var newAction = _objectSpread2(_objectSpread2({}, actionInfo.action), {}, {
-      start: start,
-      end: end
-    });
-    var row = addActionToRow(removeActionFromRow(editorData[actionInfo.rowIndex], newAction.id), newAction);
-    var data = {
-      action: actionInfo.action,
-      row: row,
-      start: start,
-      end: end
-    };
-    handleUpdateDragLine(data);
-    // Check if the movement is valid
-    if (_onActionMoving) {
-      var result = _onActionMoving(data);
-      if (result === false) return;
-    }
-    setEditorState(function (prev) {
+        scaleWidth: scaleWidth
+      }));
+      if (curLeft < leftLimit) curLeft = leftLimit;else if (curLeft + width > rightLimit) curLeft = rightLimit - width;
+      var _parserTransformToTim = parserTransformToTime({
+          left: curLeft,
+          width: width
+        }, {
+          scaleWidth: scaleWidth,
+          scale: scale,
+          startLeft: startLeft
+        }),
+        start = _parserTransformToTim.start,
+        end = _parserTransformToTim.end;
+      var newAction = _objectSpread2(_objectSpread2({}, currentActionInfo.action), {}, {
+        start: start,
+        end: end
+      });
+      var row = addActionToRow(removeActionFromRow(editorData[currentActionInfo.rowIndex], newAction.id), newAction);
+      var data = {
+        action: currentActionInfo.action,
+        row: row,
+        start: start,
+        end: end
+      };
+      // Check if the movement is valid
+      if (_onActionMoving) {
+        var result = _onActionMoving(data);
+        if (result === false) return prev;
+      }
+      // Side effects outside of state update
+      handleUpdateDragLine(data);
+      handleScaleCount(left, width);
+      // Return updated state
       return _objectSpread2(_objectSpread2({}, prev), {}, {
-        actionInfo: _objectSpread2(_objectSpread2({}, actionInfo), {}, {
-          ghostAction: _objectSpread2(_objectSpread2({}, actionInfo.ghostAction), {}, {
+        actionInfo: _objectSpread2(_objectSpread2({}, currentActionInfo), {}, {
+          ghostAction: _objectSpread2(_objectSpread2({}, currentActionInfo.ghostAction), {}, {
             start: start,
             end: end
           })
         })
       });
     });
-    handleScaleCount(left, width);
-  }, [actionInfo, startLeft, scale, scaleWidth, _onActionMoving, scaleSplitCount, gridSnap, dragLineData, maxScaleCount, editorData, handleScaleCount, handleUpdateDragLine]);
+  }, [startLeft, scale, scaleWidth, _onActionMoving, scaleSplitCount, gridSnap, dragLineData, maxScaleCount, editorData, handleUpdateDragLine]);
   var _onDragStart = useCallback(function (action, row, clientX, clientY, rowIndex) {
     setEditorState(function (prevState) {
       return {
@@ -2554,7 +2562,7 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
         }
       };
     });
-  }, [startLeft, scale, scaleWidth, maxScaleCount]);
+  }, []);
   var handleMouseUp = useCallback(function (_) {
     if (!actionInfo) return;
     disposeDragLine();
@@ -2564,22 +2572,23 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
     var origRowIndex = actionInfo.ghostRowIndex;
     // Find the target row
     var targetRowIndex = actionInfo.rowIndex;
-    // Update the action with new start and end times
-    var origAction = actionInfo.action;
-    origAction.start = actionInfo.ghostAction.start;
-    origAction.end = actionInfo.ghostAction.end;
+    // Create a new action object with updated times instead of mutating
+    var updatedAction = _objectSpread2(_objectSpread2({}, actionInfo.action), {}, {
+      start: actionInfo.ghostAction.start,
+      end: actionInfo.ghostAction.end
+    });
     // Remove the action from the original row
     updatedEditorData[origRowIndex] = removeActionFromRow(updatedEditorData[origRowIndex], actionInfo.action.id);
     // Add the action to the target row
-    updatedEditorData[targetRowIndex] = addActionToRow(updatedEditorData[targetRowIndex], origAction);
+    updatedEditorData[targetRowIndex] = addActionToRow(updatedEditorData[targetRowIndex], updatedAction);
     // Update the editor data
     setEditorData(updatedEditorData);
     // Execute callback
     if (_onActionMoveEnd) _onActionMoveEnd({
-      action: origAction,
+      action: updatedAction,
       row: actionInfo.ghostRow,
-      start: origAction.start,
-      end: origAction.end
+      start: updatedAction.start,
+      end: updatedAction.end
     });
   }, [actionInfo, editorData, setEditorData, disposeDragLine, _onActionMoveEnd]);
   /** Get the rendering content for each cell */
@@ -2588,6 +2597,9 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
       key = _ref.key,
       style = _ref.style;
     var row = editorData[rowIndex]; // Row data
+    if (!row) {
+      return null; // Return null if row doesn't exist
+    }
     return /*#__PURE__*/React.createElement(EditRow, _objectSpread2(_objectSpread2({}, props), {}, {
       style: _objectSpread2(_objectSpread2({}, style), {}, {
         backgroundPositionX: "0, ".concat(startLeft, "px"),
@@ -2647,7 +2659,8 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
     });
   }, [scrollTop, scrollLeft]);
   useEffect(function () {
-    gridRef.current.recomputeGridSize();
+    var _gridRef$current2;
+    (_gridRef$current2 = gridRef.current) === null || _gridRef$current2 === void 0 ? void 0 : _gridRef$current2.recomputeGridSize();
   }, [editorData]);
   return /*#__PURE__*/React.createElement("div", {
     ref: editAreaRef,
@@ -2669,8 +2682,8 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
       heights.push(height - totalHeight);
       if (heightRef.current !== height && heightRef.current >= 0) {
         setTimeout(function () {
-          var _gridRef$current2;
-          return (_gridRef$current2 = gridRef.current) === null || _gridRef$current2 === void 0 ? void 0 : _gridRef$current2.recomputeGridSize({
+          var _gridRef$current3;
+          return (_gridRef$current3 = gridRef.current) === null || _gridRef$current3 === void 0 ? void 0 : _gridRef$current3.recomputeGridSize({
             rowIndex: heights.length - 1
           });
         });
