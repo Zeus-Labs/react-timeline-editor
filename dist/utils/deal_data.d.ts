@@ -23,7 +23,7 @@ export declare function parserTransformToTime(data: {
     start: number;
     end: number;
 };
-/** start + end 转 位置 + 宽度 */
+/** start + end to position + width */
 export declare function parserTimeToTransform(data: {
     start: number;
     end: number;
@@ -39,7 +39,7 @@ export declare function parserTimeToTransform(data: {
 export declare function getScaleCountByRows(data: TimelineRow[], param: {
     scale: number;
 }): number;
-/** 根据时间获取目前刻度数 */
+/** Get the current scale count based on time */
 export declare function getScaleCountByPixel(data: number, param: {
     startLeft: number;
     scaleWidth: number;
