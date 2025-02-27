@@ -2575,9 +2575,7 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
     // Remove the action from the original row
     updatedEditorData[origRowIndex] = removeActionFromRow(updatedEditorData[origRowIndex], actionInfo.action.id);
     // Add the action to the target row
-    updatedEditorData[targetRowIndex] = _objectSpread2(_objectSpread2({}, updatedEditorData[targetRowIndex]), {}, {
-      actions: [].concat(_toConsumableArray(updatedEditorData[targetRowIndex].actions), [origAction])
-    });
+    updatedEditorData[targetRowIndex] = addActionToRow(updatedEditorData[targetRowIndex], origAction);
     // Update the editor data
     setEditorData(updatedEditorData);
     // Execute callback
@@ -2659,10 +2657,7 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
     ref: editAreaRef,
     className: prefix('edit-area'),
     onMouseMove: handleMouseMove,
-    onMouseUp: handleMouseUp,
-    onMouseLeave: function onMouseLeave() {
-      return updateCurrentRow(-0);
-    }
+    onMouseUp: handleMouseUp
   }, /*#__PURE__*/React.createElement(AutoSizer, null, function (_ref2) {
     var width = _ref2.width,
       height = _ref2.height;
