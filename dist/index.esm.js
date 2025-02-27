@@ -2162,7 +2162,8 @@ var EditRow = function EditRow(props) {
     setEditorData: props.setEditorData,
     areaRef: props.areaRef,
     cursorTime: props.cursorTime,
-    timelineWidth: props.timelineWidth
+    timelineWidth: props.timelineWidth,
+    getActionRender: props.getActionRender
   }))));
 };
 
