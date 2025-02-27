@@ -48,7 +48,7 @@ export function parserTransformToTime(
   };
 }
 
-/** start + end 转 位置 + 宽度 */
+/** start + end to position + width */
 export function parserTimeToTransform(
   data: {
     start: number;
@@ -81,7 +81,7 @@ export function getScaleCountByRows(data: TimelineRow[], param: { scale: number 
   return count + ADD_SCALE_COUNT;
 }
 
-/** 根据时间获取目前刻度数 */
+/** Get the current scale count based on time */
 export function getScaleCountByPixel(
   data: number,
   param: {

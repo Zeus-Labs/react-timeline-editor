@@ -19,8 +19,9 @@ export type EditActionProps = CommonProp & {
   /** Set scroll left */
   deltaScrollLeft?: (delta: number) => void;
   /** Callback triggered when dragging starts */
-  onDragStart: (
+  onDragStart?: (
     action: TimelineAction,
+    row: TimelineRow,
     clientX: number,
     clientY: number,
   ) => void;
@@ -205,7 +206,10 @@ export const EditAction: FC<EditActionProps> = ({
       deltaScrollLeft={deltaScrollLeft}
     >
       <div
-        onMouseDown={(e) => onDragStart(action, e.clientX, e.clientY)}
+        onMouseDown={(e) => {
+          if (disableDrag) return;
+          onDragStart?.(action, row, e.clientX, e.clientY)
+        }}
         onClick={(e) => {
           let time: number;
           if (onClickAction) {
