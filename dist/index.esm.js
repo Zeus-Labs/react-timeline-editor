@@ -2560,7 +2560,8 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
     return /*#__PURE__*/React.createElement(EditRow, _objectSpread2(_objectSpread2({}, props), {}, {
       style: _objectSpread2(_objectSpread2({}, style), {}, {
         backgroundPositionX: "0, ".concat(startLeft, "px"),
-        backgroundSize: "".concat(startLeft, "px, ").concat(scaleWidth, "px")
+        backgroundSize: "".concat(startLeft, "px, ").concat(scaleWidth, "px"),
+        background: rowIndex === (actionInfo === null || actionInfo === void 0 ? void 0 : actionInfo.rowIndex) ? "red" : style.background
       }),
       areaRef: editAreaRef,
       key: key,
