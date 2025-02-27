@@ -206,7 +206,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
         },
       }));
     },
-    [actionInfo, tracks, onActionMoving, editorData],
+    [actionInfo, onActionMoving, editorData],
   );
 
   /** Calculate scale count */
@@ -219,7 +219,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
       });
       if (curScaleCount !== scaleCount) setScaleCount(curScaleCount);
     },
-    [setScaleCount],
+    [setScaleCount, startLeft, scaleCount, scaleWidth],
   );
 
   const handleMouseMove = useCallback(
@@ -298,48 +298,51 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
       }));
       handleScaleCount(left, width);
     },
-    [actionInfo, startLeft, scale, scaleWidth, onActionMoving, scaleSplitCount],
+    [actionInfo, startLeft, scale, scaleWidth, onActionMoving, scaleSplitCount, gridSnap, dragLineData, editorData, handleScaleCount, handleUpdateDragLine],
   );
 
-  const onDragStart = useCallback((action: TimelineAction, row: TimelineRow, clientX: number, clientY: number, rowIndex: number) => {
-    const leftLimit = parserTimeToPixel(action.minStart || 0, {
-      startLeft,
-      scale,
-      scaleWidth,
-    });
-
-    const rightLimit = Math.min(
-      maxScaleCount * scaleWidth + startLeft, // Limit movement range based on maxScaleCount
-      parserTimeToPixel(action.maxEnd || Number.MAX_VALUE, {
+  const onDragStart = useCallback(
+    (action: TimelineAction, row: TimelineRow, clientX: number, clientY: number, rowIndex: number) => {
+      const leftLimit = parserTimeToPixel(action.minStart || 0, {
         startLeft,
         scale,
         scaleWidth,
-      }),
-    );
+      });
 
-    setEditorState((prevState) => ({
-      tracks: prevState.tracks,
-      actionInfo: {
-        ghostAction: {
-          ...action,
-          id: action.id + '-ghost',
+      const rightLimit = Math.min(
+        maxScaleCount * scaleWidth + startLeft, // Limit movement range based on maxScaleCount
+        parserTimeToPixel(action.maxEnd || Number.MAX_VALUE, {
+          startLeft,
+          scale,
+          scaleWidth,
+        }),
+      );
+
+      setEditorState((prevState) => ({
+        tracks: prevState.tracks,
+        actionInfo: {
+          ghostAction: {
+            ...action,
+            id: action.id + '-ghost',
+          },
+          action: {
+            ...action,
+          },
+          ghostRow: row,
+          row: row,
+          rowIndex,
+          ghostRowIndex: rowIndex,
+          dragInfo: {
+            startX: clientX,
+            startY: clientY,
+            rightLimit,
+            leftLimit,
+          },
         },
-        action: {
-          ...action,
-        },
-        ghostRow: row,
-        row: row,
-        rowIndex,
-        ghostRowIndex: rowIndex,
-        dragInfo: {
-          startX: clientX,
-          startY: clientY,
-          rightLimit,
-          leftLimit,
-        },
-      },
-    }));
-  }, []);
+      }));
+    },
+    [startLeft, scale, scaleWidth, maxScaleCount],
+  );
 
   const handleMouseUp = useCallback(
     (_: React.MouseEvent<HTMLDivElement>) => {
@@ -380,7 +383,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
           end: origAction.end,
         });
     },
-    [actionInfo, editorData, setEditorData],
+    [actionInfo, editorData, setEditorData, disposeDragLine, onActionMoveEnd],
   );
 
   /** Get the rendering content for each cell */
