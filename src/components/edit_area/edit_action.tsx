@@ -180,7 +180,6 @@ export const EditAction: FC<EditActionProps> = ({
             time = handleTime(e);
             onClickAction(e, { row, action, time: time });
           }
-          // TODO: identify when it is a just a click vrs click and drag or resize
           if (onClickActionOnly) {
             if (!time) time = handleTime(e);
             onClickActionOnly(e, { row, action, time: time });
