@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { TimelineRow } from '../../interface/action';
+import { TimelineAction, TimelineRow } from '../../interface/action';
 import { CommonProp } from '../../interface/common_prop';
 import { prefix } from '../../utils/deal_class_prefix';
 import { parserPixelToTime } from '../../utils/deal_data';
@@ -10,6 +10,7 @@ import './edit_row.less';
 export type EditRowProps = CommonProp & {
   areaRef: React.MutableRefObject<HTMLDivElement>;
   rowData?: TimelineRow;
+  ghostAction?: TimelineAction;
   style?: React.CSSProperties;
   dragLineData: DragLineData;
   setEditorData: (params: TimelineRow[]) => void;
@@ -17,10 +18,13 @@ export type EditRowProps = CommonProp & {
   scrollLeft: number;
   /** Set scroll left */
   deltaScrollLeft: (scrollLeft: number) => void;
+  /** Callback triggered when dragging starts */
+  onDragStart?: (action: TimelineAction, row: TimelineRow, clientX: number, clientY: number) => void;
+  onMouseEnter?: (row?: TimelineRow) => void;
 };
 
 export const EditRow: FC<EditRowProps> = (props) => {
-  const { rowData, style = {}, onClickRow, onDoubleClickRow, onContextMenuRow, areaRef, scrollLeft, startLeft, scale, scaleWidth } = props;
+  const { rowData, ghostAction, style = {}, onClickRow, onMouseEnter, onDoubleClickRow, onContextMenuRow, areaRef, scrollLeft, startLeft, scale, scaleWidth } = props;
 
   const classNames = ['edit-row'];
   if (rowData?.selected) classNames.push('edit-row-selected');
@@ -56,10 +60,37 @@ export const EditRow: FC<EditRowProps> = (props) => {
           onContextMenuRow(e, { row: rowData, time: time });
         }
       }}
+      onMouseEnter={() => onMouseEnter(rowData)}
     >
       {(rowData?.actions || []).map((action) => (
         <EditAction key={action.id} {...props} handleTime={handleTime} row={rowData} action={action} />
       ))}
+
+      {ghostAction && (
+        <div style={{ opacity: 0.5 }}>
+          <EditAction
+            key={ghostAction.id + '-ghost'}
+            handleTime={handleTime}
+            row={rowData}
+            action={ghostAction}
+            disableDrag={true}
+            editorData={props.editorData}
+            effects={props.effects}
+            scaleCount={props.scaleCount}
+            maxScaleCount={props.maxScaleCount}
+            setScaleCount={props.setScaleCount}
+            startLeft={props.startLeft}
+            scale={props.scale}
+            scaleWidth={props.scaleWidth}
+            dragLineData={props.dragLineData}
+            setEditorData={props.setEditorData}
+            areaRef={props.areaRef}
+            cursorTime={props.cursorTime}
+            timelineWidth={props.timelineWidth}
+            getActionRender={props.getActionRender}
+          />
+        </div>
+      )}
     </div>
   );
 };

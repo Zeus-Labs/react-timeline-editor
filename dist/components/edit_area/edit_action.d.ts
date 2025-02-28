@@ -10,7 +10,9 @@ export type EditActionProps = CommonProp & {
     setEditorData: (params: TimelineRow[]) => void;
     handleTime: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => number;
     areaRef: React.MutableRefObject<HTMLDivElement>;
-    /** 设置scroll left */
+    /** Set scroll left */
     deltaScrollLeft?: (delta: number) => void;
+    /** Callback triggered when dragging starts */
+    onDragStart?: (action: TimelineAction, row: TimelineRow, clientX: number, clientY: number) => void;
 };
 export declare const EditAction: FC<EditActionProps>;

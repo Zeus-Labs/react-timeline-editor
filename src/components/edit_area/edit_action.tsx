@@ -5,7 +5,7 @@ import { DEFAULT_ADSORPTION_DISTANCE, DEFAULT_MOVE_GRID } from '../../interface/
 import { prefix } from '../../utils/deal_class_prefix';
 import { getScaleCountByPixel, parserTimeToPixel, parserTimeToTransform, parserTransformToTime } from '../../utils/deal_data';
 import { RowDnd } from '../row_rnd/row_rnd';
-import { RndDragCallback, RndDragEndCallback, RndDragStartCallback, RndResizeCallback, RndResizeEndCallback, RndResizeStartCallback, RowRndApi } from '../row_rnd/row_rnd_interface';
+import { RndResizeCallback, RndResizeEndCallback, RndResizeStartCallback, RowRndApi } from '../row_rnd/row_rnd_interface';
 import { DragLineData } from './drag_lines';
 import './edit_action.less';
 
@@ -16,8 +16,10 @@ export type EditActionProps = CommonProp & {
   setEditorData: (params: TimelineRow[]) => void;
   handleTime: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => number;
   areaRef: React.MutableRefObject<HTMLDivElement>;
-  /** 设置scroll left */
+  /** Set scroll left */
   deltaScrollLeft?: (delta: number) => void;
+  /** Callback triggered when dragging starts */
+  onDragStart?: (action: TimelineAction, row: TimelineRow, clientX: number, clientY: number) => void;
 };
 
 export const EditAction: FC<EditActionProps> = ({
@@ -36,12 +38,10 @@ export const EditAction: FC<EditActionProps> = ({
   scaleCount,
   maxScaleCount,
   setScaleCount,
-  onActionMoveStart,
-  onActionMoving,
-  onActionMoveEnd,
   onActionResizeStart,
   onActionResizeEnd,
   onActionResizing,
+  onDragStart,
 
   dragLineData,
   setEditorData,
@@ -55,7 +55,6 @@ export const EditAction: FC<EditActionProps> = ({
   deltaScrollLeft,
 }) => {
   const rowRnd = useRef<RowRndApi>();
-  const isDragWhenClick = useRef(false);
   const { id, maxEnd, minStart, end, start, selected, flexible = true, movable = true, effectId } = action;
 
   // Get max/min pixel range
@@ -102,43 +101,11 @@ export const EditAction: FC<EditActionProps> = ({
     if (curScaleCount !== scaleCount) setScaleCount(curScaleCount);
   };
 
-  //#region [rgba(100,120,156,0.08)] callbacks
-  const handleDragStart: RndDragStartCallback = () => {
-    onActionMoveStart && onActionMoveStart({ action, row });
-  };
-  const handleDrag: RndDragCallback = ({ left, width }) => {
-    isDragWhenClick.current = true;
-
-    if (onActionMoving) {
-      const { start, end } = parserTransformToTime({ left, width }, { scaleWidth, scale, startLeft });
-      const result = onActionMoving({ action, row, start, end });
-      if (result === false) return false;
-    }
-    setTransform({ left, width });
-    handleScaleCount(left, width);
-  };
-
-  const handleDragEnd: RndDragEndCallback = ({ left, width }) => {
-    // Calculate time
-    const { start, end } = parserTransformToTime({ left, width }, { scaleWidth, scale, startLeft });
-
-    // Set data
-    const rowItem = editorData.find((item) => item.id === row.id);
-    const action = rowItem.actions.find((item) => item.id === id);
-    action.start = start;
-    action.end = end;
-    setEditorData(editorData);
-
-    // Execute callback
-    if (onActionMoveEnd) onActionMoveEnd({ action, row, start, end });
-  };
-
   const handleResizeStart: RndResizeStartCallback = (dir) => {
     onActionResizeStart && onActionResizeStart({ action, row, dir });
   };
 
   const handleResizing: RndResizeCallback = (dir, { left, width }) => {
-    isDragWhenClick.current = true;
     if (onActionResizing) {
       const { start, end } = parserTransformToTime({ left, width }, { scaleWidth, scale, startLeft });
       const result = onActionResizing({ action, row, start, end, dir });
@@ -195,19 +162,17 @@ export const EditAction: FC<EditActionProps> = ({
         left: !disableDrag && flexible && `.${prefix('action-left-stretch')}`,
         right: !disableDrag && flexible && `.${prefix('action-right-stretch')}`,
       }}
-      enableDragging={!disableDrag && movable}
+      enableDragging={false}
       enableResizing={!disableDrag && flexible}
-      onDragStart={handleDragStart}
-      onDrag={handleDrag}
-      onDragEnd={handleDragEnd}
       onResizeStart={handleResizeStart}
       onResize={handleResizing}
       onResizeEnd={handleResizeEnd}
       deltaScrollLeft={deltaScrollLeft}
     >
       <div
-        onMouseDown={() => {
-          isDragWhenClick.current = false;
+        onMouseDown={(e) => {
+          if (!movable || disableDrag) return;
+          onDragStart?.(action, row, e.clientX, e.clientY);
         }}
         onClick={(e) => {
           let time: number;
@@ -215,7 +180,7 @@ export const EditAction: FC<EditActionProps> = ({
             time = handleTime(e);
             onClickAction(e, { row, action, time: time });
           }
-          if (!isDragWhenClick.current && onClickActionOnly) {
+          if (onClickActionOnly) {
             if (!time) time = handleTime(e);
             onClickActionOnly(e, { row, action, time: time });
           }
@@ -236,8 +201,8 @@ export const EditAction: FC<EditActionProps> = ({
         style={{ height: rowHeight }}
       >
         {getActionRender && getActionRender(nowAction, nowRow)}
-        {flexible && <div className={prefix('action-left-stretch')} />}
-        {flexible && <div className={prefix('action-right-stretch')} />}
+        {flexible && <div onMouseDown={(e) => e.stopPropagation()} className={prefix('action-left-stretch')} />}
+        {flexible && <div onMouseDown={(e) => e.stopPropagation()} className={prefix('action-right-stretch')} />}
       </div>
     </RowDnd>
   );
