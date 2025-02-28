@@ -1842,36 +1842,6 @@ var EditAction = function EditAction(_ref) {
     });
     if (curScaleCount !== scaleCount) setScaleCount(curScaleCount);
   };
-  //#region [rgba(100,120,156,0.08)] callbacks
-  //const handleDragStart: RndDragStartCallback = () => {
-  //  onActionMoveStart && onActionMoveStart({ action, row });
-  //};
-  //const handleDrag: RndDragCallback = ({ left, width }) => {
-  //  isDragWhenClick.current = true;
-  //
-  //  if (onActionMoving) {
-  //    const { start, end } = parserTransformToTime({ left, width }, { scaleWidth, scale, startLeft });
-  //    const result = onActionMoving({ action, row, start, end });
-  //    if (result === false) return false;
-  //  }
-  //  setTransform({ left, width });
-  //  handleScaleCount(left, width);
-  //};
-  //
-  //const handleDragEnd: RndDragEndCallback = ({ left, width }) => {
-  //  // Calculate time
-  //  const { start, end } = parserTransformToTime({ left, width }, { scaleWidth, scale, startLeft });
-  //
-  //  // Set data
-  //  const rowItem = editorData.find((item) => item.id === row.id);
-  //  const action = rowItem.actions.find((item) => item.id === id);
-  //  action.start = start;
-  //  action.end = end;
-  //  setEditorData(editorData);
-  //
-  //  // Execute callback
-  //  if (onActionMoveEnd) onActionMoveEnd({ action, row, start, end });
-  //};
   var handleResizeStart = function handleResizeStart(dir) {
     onActionResizeStart && onActionResizeStart({
       action: action,
@@ -1994,7 +1964,6 @@ var EditAction = function EditAction(_ref) {
           time: time
         });
       }
-      // TODO: identify when it is a just a click vrs click and drag or resize
       if (onClickActionOnly) {
         if (!time) time = handleTime(e);
         onClickActionOnly(e, {
@@ -2072,33 +2041,6 @@ var EditRow = function EditRow(props) {
     });
     return time;
   };
-  //const { onDragStart, onDrag, onDragEnd } = useTimelineDragAndDrop(
-  //  {
-  //    //overlays,
-  //    // TODO: remove this and use time to pixels or something similar
-  //    durationInFrames: 1500,
-  //    //onOverlayChange,
-  //    updateGhostElement: () => console.log("updateGhostElement"),
-  //    resetDragState: () => console.log("resetDragState"),
-  //    timelineRef: areaRef,
-  //    dragInfo,
-  //    // TODO: remove this and pass in the list of rows
-  //    maxRows: 4,
-  //  }
-  //);
-  //const onDragStart = useCallback((action: TimelineAction, clientX: number, clientY: number) => {
-  //  console.log("on drag start edit row", { action, clientX, clientY });
-  //  setGhostAction({ ...action, start: action.start - 1, end: action.end - 1 })
-  //}, []);
-  //
-  //const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-  //  //console.log("handle mouse moved", { clientX: e.clientX, clientY: e.clientY });
-  //}, []);
-  //
-  //const handleMouseUp = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-  //  console.log("handle mouse up moved", { clientX: e.clientX, clientY: e.clientY });
-  //  setGhostAction(null);
-  //}, []);
   return /*#__PURE__*/React.createElement("div", {
     className: "".concat(prefix.apply(void 0, classNames), " ").concat(((rowData === null || rowData === void 0 ? void 0 : rowData.classNames) || []).join(' ')),
     style: style,
