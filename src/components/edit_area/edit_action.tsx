@@ -101,37 +101,6 @@ export const EditAction: FC<EditActionProps> = ({
     if (curScaleCount !== scaleCount) setScaleCount(curScaleCount);
   };
 
-  //#region [rgba(100,120,156,0.08)] callbacks
-  //const handleDragStart: RndDragStartCallback = () => {
-  //  onActionMoveStart && onActionMoveStart({ action, row });
-  //};
-  //const handleDrag: RndDragCallback = ({ left, width }) => {
-  //  isDragWhenClick.current = true;
-  //
-  //  if (onActionMoving) {
-  //    const { start, end } = parserTransformToTime({ left, width }, { scaleWidth, scale, startLeft });
-  //    const result = onActionMoving({ action, row, start, end });
-  //    if (result === false) return false;
-  //  }
-  //  setTransform({ left, width });
-  //  handleScaleCount(left, width);
-  //};
-  //
-  //const handleDragEnd: RndDragEndCallback = ({ left, width }) => {
-  //  // Calculate time
-  //  const { start, end } = parserTransformToTime({ left, width }, { scaleWidth, scale, startLeft });
-  //
-  //  // Set data
-  //  const rowItem = editorData.find((item) => item.id === row.id);
-  //  const action = rowItem.actions.find((item) => item.id === id);
-  //  action.start = start;
-  //  action.end = end;
-  //  setEditorData(editorData);
-  //
-  //  // Execute callback
-  //  if (onActionMoveEnd) onActionMoveEnd({ action, row, start, end });
-  //};
-
   const handleResizeStart: RndResizeStartCallback = (dir) => {
     onActionResizeStart && onActionResizeStart({ action, row, dir });
   };

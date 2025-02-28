@@ -38,35 +38,6 @@ export const EditRow: FC<EditRowProps> = (props) => {
     return time;
   };
 
-  //const { onDragStart, onDrag, onDragEnd } = useTimelineDragAndDrop(
-  //  {
-  //    //overlays,
-  //    // TODO: remove this and use time to pixels or something similar
-  //    durationInFrames: 1500,
-  //    //onOverlayChange,
-  //    updateGhostElement: () => console.log("updateGhostElement"),
-  //    resetDragState: () => console.log("resetDragState"),
-  //    timelineRef: areaRef,
-  //    dragInfo,
-  //    // TODO: remove this and pass in the list of rows
-  //    maxRows: 4,
-  //  }
-  //);
-
-  //const onDragStart = useCallback((action: TimelineAction, clientX: number, clientY: number) => {
-  //  console.log("on drag start edit row", { action, clientX, clientY });
-  //  setGhostAction({ ...action, start: action.start - 1, end: action.end - 1 })
-  //}, []);
-  //
-  //const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-  //  //console.log("handle mouse moved", { clientX: e.clientX, clientY: e.clientY });
-  //}, []);
-  //
-  //const handleMouseUp = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-  //  console.log("handle mouse up moved", { clientX: e.clientX, clientY: e.clientY });
-  //  setGhostAction(null);
-  //}, []);
-
   return (
     <div
       className={`${prefix(...classNames)} ${(rowData?.classNames || []).join(' ')}`}
