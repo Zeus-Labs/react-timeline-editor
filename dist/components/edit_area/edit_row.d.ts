@@ -7,6 +7,7 @@ export type EditRowProps = CommonProp & {
     areaRef: React.MutableRefObject<HTMLDivElement>;
     rowData?: TimelineRow;
     ghostAction?: TimelineAction;
+    invalidMovement?: boolean;
     style?: React.CSSProperties;
     dragLineData: DragLineData;
     setEditorData: (params: TimelineRow[]) => void;
