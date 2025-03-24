@@ -11,6 +11,7 @@ export type EditRowProps = CommonProp & {
   areaRef: React.MutableRefObject<HTMLDivElement>;
   rowData?: TimelineRow;
   ghostAction?: TimelineAction;
+  invalidMovement?: boolean;
   style?: React.CSSProperties;
   dragLineData: DragLineData;
   setEditorData: (params: TimelineRow[]) => void;
@@ -24,7 +25,7 @@ export type EditRowProps = CommonProp & {
 };
 
 export const EditRow: FC<EditRowProps> = (props) => {
-  const { rowData, ghostAction, style = {}, onClickRow, onMouseEnter, onDoubleClickRow, onContextMenuRow, areaRef, scrollLeft, startLeft, scale, scaleWidth } = props;
+  const { rowData, ghostAction, invalidMovement, style = {}, onClickRow, onMouseEnter, onDoubleClickRow, onContextMenuRow, areaRef, scrollLeft, startLeft, scale, scaleWidth } = props;
 
   const classNames = ['edit-row'];
   if (rowData?.selected) classNames.push('edit-row-selected');
@@ -63,7 +64,7 @@ export const EditRow: FC<EditRowProps> = (props) => {
       onMouseEnter={() => onMouseEnter(rowData)}
     >
       {(rowData?.actions || []).map((action) => (
-        <EditAction key={action.id} {...props} handleTime={handleTime} row={rowData} action={action} />
+        <EditAction key={action.id} {...props} invalidMovement={undefined} handleTime={handleTime} row={rowData} action={action} />
       ))}
 
       {ghostAction && (
@@ -76,6 +77,7 @@ export const EditRow: FC<EditRowProps> = (props) => {
             disableDrag={true}
             editorData={props.editorData}
             effects={props.effects}
+            invalidMovement={invalidMovement}
             scaleCount={props.scaleCount}
             maxScaleCount={props.maxScaleCount}
             setScaleCount={props.setScaleCount}

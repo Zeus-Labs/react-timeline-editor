@@ -55,6 +55,7 @@ interface ActionInfo {
 interface EditorAreaInternalState {
   tracks: TimelineRow[];
   actionInfo: ActionInfo | null;
+  invalidMovement: boolean;
   currentMouseRow: {
     row: TimelineRow;
     index: number;
@@ -117,13 +118,14 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
     tracks: editorData,
     actionInfo: null,
     currentMouseRow: null,
+    invalidMovement: false,
   });
 
   // Destructure for easier access
   const { tracks, actionInfo } = editorState;
 
   useEffect(() => {
-    setEditorState({ tracks: editorData, actionInfo: null, currentMouseRow: null });
+    setEditorState({ tracks: editorData, actionInfo: null, currentMouseRow: null, invalidMovement: false });
   }, [editorData]);
 
   // ref data
@@ -272,7 +274,23 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
         // Check if the movement is valid
         if (onActionMoving) {
           const result = onActionMoving(data);
-          if (result === false) return prev;
+          if (result === false) {
+            console.log('here not allow');
+            return {
+              ...prev,
+              invalidMovement: true,
+              actionInfo: {
+                ...currentActionInfo,
+                ghostAction: {
+                  ...currentActionInfo.ghostAction,
+                  start,
+                  end,
+                },
+                ghostRow: currentMouseRow.row,
+                rowIndex: currentMouseRow.index,
+              },
+            };
+          }
         }
 
         // Side effects outside of state update
@@ -282,6 +300,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
         // Return updated state
         return {
           ...prev,
+          invalidMovement: false,
           actionInfo: {
             ...currentActionInfo,
             ghostAction: {
@@ -300,6 +319,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
 
   const onDragStart = useCallback((action: TimelineAction, row: TimelineRow, clientX: number, clientY: number, rowIndex: number) => {
     setEditorState((prevState) => ({
+      invalidMovement: false,
       tracks: prevState.tracks,
       actionInfo: {
         ghostAction: {
@@ -387,6 +407,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
         rowHeight={row?.rowHeight || rowHeight}
         rowData={row}
         ghostAction={actionInfo?.rowIndex === rowIndex ? actionInfo?.ghostAction : undefined}
+        invalidMovement={editorState.invalidMovement}
         onMouseEnter={(row) => updateCurrentRow(rowIndex, row)}
         onDragStart={(action: TimelineAction, row: TimelineRow, clientX: number, clientY: number) => {
           handleInitDragLine({ action, row });
