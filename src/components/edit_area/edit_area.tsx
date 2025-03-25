@@ -122,7 +122,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
   });
 
   // Destructure for easier access
-  const { tracks, actionInfo } = editorState;
+  const { tracks, actionInfo, invalidMovement } = editorState;
 
   useEffect(() => {
     setEditorState({ tracks: editorData, actionInfo: null, currentMouseRow: null, invalidMovement: false });
@@ -275,7 +275,6 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
         if (onActionMoving) {
           const result = onActionMoving(data);
           if (result === false) {
-            console.log('here not allow');
             return {
               ...prev,
               invalidMovement: true,
@@ -353,6 +352,21 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
       // Create a deep copy of the editor data to avoid direct mutations
       const updatedEditorData = [...editorData];
 
+      if (invalidMovement) {
+        // Update the editor data
+        setEditorData(updatedEditorData);
+
+        // Execute callback with original values since the movement is invalid
+        if (onActionMoveEnd)
+          onActionMoveEnd({
+            action: { ...actionInfo.action },
+            row: actionInfo.row,
+            start: actionInfo.action.start,
+            end: actionInfo.action.end,
+          });
+        return;
+      }
+
       // Find the original row and action
       const origRowIndex = actionInfo.ghostRowIndex;
       // Find the target row
@@ -383,7 +397,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
           end: updatedAction.end,
         });
     },
-    [actionInfo, editorData, setEditorData, disposeDragLine, onActionMoveEnd],
+    [actionInfo, invalidMovement, editorData, setEditorData, disposeDragLine, onActionMoveEnd],
   );
 
   /** Get the rendering content for each cell */
