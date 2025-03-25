@@ -2311,7 +2311,8 @@ var EditArea = /*#__PURE__*/React__default['default'].forwardRef(function (props
     setEditorState = _useState2[1];
   // Destructure for easier access
   var tracks = editorState.tracks,
-    actionInfo = editorState.actionInfo;
+    actionInfo = editorState.actionInfo,
+    invalidMovement = editorState.invalidMovement;
   React.useEffect(function () {
     setEditorState({
       tracks: editorData,
@@ -2476,7 +2477,6 @@ var EditArea = /*#__PURE__*/React__default['default'].forwardRef(function (props
       if (_onActionMoving) {
         var result = _onActionMoving(data);
         if (result === false) {
-          console.log('here not allow');
           return _objectSpread2(_objectSpread2({}, prev), {}, {
             invalidMovement: true,
             actionInfo: _objectSpread2(_objectSpread2({}, currentActionInfo), {}, {
@@ -2538,6 +2538,18 @@ var EditArea = /*#__PURE__*/React__default['default'].forwardRef(function (props
     disposeDragLine();
     // Create a deep copy of the editor data to avoid direct mutations
     var updatedEditorData = _toConsumableArray(editorData);
+    if (invalidMovement) {
+      // Update the editor data
+      setEditorData(updatedEditorData);
+      // Execute callback with original values since the movement is invalid
+      if (_onActionMoveEnd) _onActionMoveEnd({
+        action: _objectSpread2({}, actionInfo.action),
+        row: actionInfo.row,
+        start: actionInfo.action.start,
+        end: actionInfo.action.end
+      });
+      return;
+    }
     // Find the original row and action
     var origRowIndex = actionInfo.ghostRowIndex;
     // Find the target row
@@ -2560,7 +2572,7 @@ var EditArea = /*#__PURE__*/React__default['default'].forwardRef(function (props
       start: updatedAction.start,
       end: updatedAction.end
     });
-  }, [actionInfo, editorData, setEditorData, disposeDragLine, _onActionMoveEnd]);
+  }, [actionInfo, invalidMovement, editorData, setEditorData, disposeDragLine, _onActionMoveEnd]);
   /** Get the rendering content for each cell */
   var cellRenderer = function cellRenderer(_ref) {
     var rowIndex = _ref.rowIndex,
