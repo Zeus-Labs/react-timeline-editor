@@ -1759,6 +1759,7 @@ var EditAction = function EditAction(_ref) {
     startLeft = _ref.startLeft,
     gridSnap = _ref.gridSnap,
     disableDrag = _ref.disableDrag,
+    invalidMovement = _ref.invalidMovement,
     scaleCount = _ref.scaleCount,
     maxScaleCount = _ref.maxScaleCount,
     setScaleCount = _ref.setScaleCount,
@@ -1997,7 +1998,18 @@ var EditAction = function EditAction(_ref) {
     style: {
       height: rowHeight
     }
-  }, getActionRender && getActionRender(nowAction, nowRow), flexible && /*#__PURE__*/React.createElement("div", {
+  }, invalidMovement === true && (/*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(255, 0, 0, 0.5)',
+      zIndex: 10,
+      pointerEvents: 'none'
+    }
+  })), getActionRender && getActionRender(nowAction, nowRow), flexible && /*#__PURE__*/React.createElement("div", {
     onMouseDown: function onMouseDown(e) {
       return e.stopPropagation();
     },
@@ -2016,6 +2028,7 @@ styleInject(css_248z$4);
 var EditRow = function EditRow(props) {
   var rowData = props.rowData,
     ghostAction = props.ghostAction,
+    invalidMovement = props.invalidMovement,
     _props$style = props.style,
     style = _props$style === void 0 ? {} : _props$style,
     onClickRow = props.onClickRow,
@@ -2078,6 +2091,7 @@ var EditRow = function EditRow(props) {
     return /*#__PURE__*/React.createElement(EditAction, _objectSpread2(_objectSpread2({
       key: action.id
     }, props), {}, {
+      invalidMovement: undefined,
       handleTime: handleTime,
       row: rowData,
       action: action
@@ -2094,6 +2108,7 @@ var EditRow = function EditRow(props) {
     disableDrag: true,
     editorData: props.editorData,
     effects: props.effects,
+    invalidMovement: invalidMovement,
     scaleCount: props.scaleCount,
     maxScaleCount: props.maxScaleCount,
     setScaleCount: props.setScaleCount,
@@ -2279,19 +2294,22 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
   var _useState = useState({
       tracks: editorData,
       actionInfo: null,
-      currentMouseRow: null
+      currentMouseRow: null,
+      invalidMovement: false
     }),
     _useState2 = _slicedToArray(_useState, 2),
     editorState = _useState2[0],
     setEditorState = _useState2[1];
   // Destructure for easier access
   var tracks = editorState.tracks,
-    actionInfo = editorState.actionInfo;
+    actionInfo = editorState.actionInfo,
+    invalidMovement = editorState.invalidMovement;
   useEffect(function () {
     setEditorState({
       tracks: editorData,
       actionInfo: null,
-      currentMouseRow: null
+      currentMouseRow: null,
+      invalidMovement: false
     });
   }, [editorData]);
   // ref data
@@ -2449,13 +2467,26 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
       // Check if the movement is valid
       if (_onActionMoving) {
         var result = _onActionMoving(data);
-        if (result === false) return prev;
+        if (result === false) {
+          return _objectSpread2(_objectSpread2({}, prev), {}, {
+            invalidMovement: true,
+            actionInfo: _objectSpread2(_objectSpread2({}, currentActionInfo), {}, {
+              ghostAction: _objectSpread2(_objectSpread2({}, currentActionInfo.ghostAction), {}, {
+                start: start,
+                end: end
+              }),
+              ghostRow: currentMouseRow.row,
+              rowIndex: currentMouseRow.index
+            })
+          });
+        }
       }
       // Side effects outside of state update
       handleUpdateDragLine(data);
       handleScaleCount(left, width);
       // Return updated state
       return _objectSpread2(_objectSpread2({}, prev), {}, {
+        invalidMovement: false,
         actionInfo: _objectSpread2(_objectSpread2({}, currentActionInfo), {}, {
           ghostAction: _objectSpread2(_objectSpread2({}, currentActionInfo.ghostAction), {}, {
             start: start,
@@ -2470,6 +2501,7 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
   var _onDragStart = useCallback(function (action, row, clientX, clientY, rowIndex) {
     setEditorState(function (prevState) {
       return {
+        invalidMovement: false,
         tracks: prevState.tracks,
         actionInfo: {
           ghostAction: _objectSpread2(_objectSpread2({}, action), {}, {
@@ -2497,6 +2529,18 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
     disposeDragLine();
     // Create a deep copy of the editor data to avoid direct mutations
     var updatedEditorData = _toConsumableArray(editorData);
+    if (invalidMovement) {
+      // Update the editor data
+      setEditorData(updatedEditorData);
+      // Execute callback with original values since the movement is invalid
+      if (_onActionMoveEnd) _onActionMoveEnd({
+        action: _objectSpread2({}, actionInfo.action),
+        row: actionInfo.row,
+        start: actionInfo.action.start,
+        end: actionInfo.action.end
+      });
+      return;
+    }
     // Find the original row and action
     var origRowIndex = actionInfo.ghostRowIndex;
     // Find the target row
@@ -2519,7 +2563,7 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
       start: updatedAction.start,
       end: updatedAction.end
     });
-  }, [actionInfo, editorData, setEditorData, disposeDragLine, _onActionMoveEnd]);
+  }, [actionInfo, invalidMovement, editorData, setEditorData, disposeDragLine, _onActionMoveEnd]);
   /** Get the rendering content for each cell */
   var cellRenderer = function cellRenderer(_ref) {
     var rowIndex = _ref.rowIndex,
@@ -2539,6 +2583,7 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
       rowHeight: (row === null || row === void 0 ? void 0 : row.rowHeight) || _rowHeight,
       rowData: row,
       ghostAction: (actionInfo === null || actionInfo === void 0 ? void 0 : actionInfo.rowIndex) === rowIndex ? actionInfo === null || actionInfo === void 0 ? void 0 : actionInfo.ghostAction : undefined,
+      invalidMovement: editorState.invalidMovement,
       onMouseEnter: function onMouseEnter(row) {
         return updateCurrentRow(rowIndex, row);
       },

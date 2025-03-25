@@ -16,6 +16,7 @@ export type EditActionProps = CommonProp & {
   setEditorData: (params: TimelineRow[]) => void;
   handleTime: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => number;
   areaRef: React.MutableRefObject<HTMLDivElement>;
+  invalidMovement?: boolean;
   /** Set scroll left */
   deltaScrollLeft?: (delta: number) => void;
   /** Callback triggered when dragging starts */
@@ -34,6 +35,7 @@ export const EditAction: FC<EditActionProps> = ({
   startLeft,
   gridSnap,
   disableDrag,
+  invalidMovement,
 
   scaleCount,
   maxScaleCount,
@@ -200,6 +202,20 @@ export const EditAction: FC<EditActionProps> = ({
         className={prefix((classNames || []).join(' '))}
         style={{ height: rowHeight }}
       >
+        {invalidMovement === true && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(255, 0, 0, 0.5)',
+              zIndex: 10,
+              pointerEvents: 'none',
+            }}
+          />
+        )}
         {getActionRender && getActionRender(nowAction, nowRow)}
         {flexible && <div onMouseDown={(e) => e.stopPropagation()} className={prefix('action-left-stretch')} />}
         {flexible && <div onMouseDown={(e) => e.stopPropagation()} className={prefix('action-right-stretch')} />}

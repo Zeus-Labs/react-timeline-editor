@@ -10,6 +10,7 @@ export type EditActionProps = CommonProp & {
     setEditorData: (params: TimelineRow[]) => void;
     handleTime: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => number;
     areaRef: React.MutableRefObject<HTMLDivElement>;
+    invalidMovement?: boolean;
     /** Set scroll left */
     deltaScrollLeft?: (delta: number) => void;
     /** Callback triggered when dragging starts */

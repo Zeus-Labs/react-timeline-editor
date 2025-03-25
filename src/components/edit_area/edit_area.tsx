@@ -55,6 +55,7 @@ interface ActionInfo {
 interface EditorAreaInternalState {
   tracks: TimelineRow[];
   actionInfo: ActionInfo | null;
+  invalidMovement: boolean;
   currentMouseRow: {
     row: TimelineRow;
     index: number;
@@ -117,13 +118,14 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
     tracks: editorData,
     actionInfo: null,
     currentMouseRow: null,
+    invalidMovement: false,
   });
 
   // Destructure for easier access
-  const { tracks, actionInfo } = editorState;
+  const { tracks, actionInfo, invalidMovement } = editorState;
 
   useEffect(() => {
-    setEditorState({ tracks: editorData, actionInfo: null, currentMouseRow: null });
+    setEditorState({ tracks: editorData, actionInfo: null, currentMouseRow: null, invalidMovement: false });
   }, [editorData]);
 
   // ref data
@@ -272,7 +274,22 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
         // Check if the movement is valid
         if (onActionMoving) {
           const result = onActionMoving(data);
-          if (result === false) return prev;
+          if (result === false) {
+            return {
+              ...prev,
+              invalidMovement: true,
+              actionInfo: {
+                ...currentActionInfo,
+                ghostAction: {
+                  ...currentActionInfo.ghostAction,
+                  start,
+                  end,
+                },
+                ghostRow: currentMouseRow.row,
+                rowIndex: currentMouseRow.index,
+              },
+            };
+          }
         }
 
         // Side effects outside of state update
@@ -282,6 +299,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
         // Return updated state
         return {
           ...prev,
+          invalidMovement: false,
           actionInfo: {
             ...currentActionInfo,
             ghostAction: {
@@ -300,6 +318,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
 
   const onDragStart = useCallback((action: TimelineAction, row: TimelineRow, clientX: number, clientY: number, rowIndex: number) => {
     setEditorState((prevState) => ({
+      invalidMovement: false,
       tracks: prevState.tracks,
       actionInfo: {
         ghostAction: {
@@ -333,6 +352,21 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
       // Create a deep copy of the editor data to avoid direct mutations
       const updatedEditorData = [...editorData];
 
+      if (invalidMovement) {
+        // Update the editor data
+        setEditorData(updatedEditorData);
+
+        // Execute callback with original values since the movement is invalid
+        if (onActionMoveEnd)
+          onActionMoveEnd({
+            action: { ...actionInfo.action },
+            row: actionInfo.row,
+            start: actionInfo.action.start,
+            end: actionInfo.action.end,
+          });
+        return;
+      }
+
       // Find the original row and action
       const origRowIndex = actionInfo.ghostRowIndex;
       // Find the target row
@@ -363,7 +397,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
           end: updatedAction.end,
         });
     },
-    [actionInfo, editorData, setEditorData, disposeDragLine, onActionMoveEnd],
+    [actionInfo, invalidMovement, editorData, setEditorData, disposeDragLine, onActionMoveEnd],
   );
 
   /** Get the rendering content for each cell */
@@ -387,6 +421,7 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
         rowHeight={row?.rowHeight || rowHeight}
         rowData={row}
         ghostAction={actionInfo?.rowIndex === rowIndex ? actionInfo?.ghostAction : undefined}
+        invalidMovement={editorState.invalidMovement}
         onMouseEnter={(row) => updateCurrentRow(rowIndex, row)}
         onDragStart={(action: TimelineAction, row: TimelineRow, clientX: number, clientY: number) => {
           handleInitDragLine({ action, row });
