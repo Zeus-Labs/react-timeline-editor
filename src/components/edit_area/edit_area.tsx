@@ -266,8 +266,13 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
         const { start, end } = parserTransformToTime({ left: curLeft, width }, { scaleWidth, scale, startLeft });
         const newAction = { ...currentActionInfo.action, start, end };
 
+        // don't allow moving between tracks
+        const isBlocked = currentActionInfo.action.blockCrossMovable;
+        const ghostRow = isBlocked ? currentActionInfo.row : currentMouseRow.row;
+        const rowIndex = isBlocked ? currentActionInfo.rowIndex : currentMouseRow.index;
+
         // Add the action to the potential new row
-        const row = addActionToRow(removeActionFromRow(editorData[currentMouseRow.index], newAction.id), newAction);
+        const row = addActionToRow(removeActionFromRow(editorData[rowIndex], newAction.id), newAction);
 
         const data = { action: currentActionInfo.action, row, start, end };
 
@@ -285,8 +290,8 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
                   start,
                   end,
                 },
-                ghostRow: currentMouseRow.row,
-                rowIndex: currentMouseRow.index,
+                ghostRow,
+                rowIndex,
               },
             };
           }
@@ -307,8 +312,8 @@ export const EditArea = React.forwardRef<EditAreaState, EditAreaProps>((props, r
               start,
               end,
             },
-            ghostRow: currentMouseRow.row,
-            rowIndex: currentMouseRow.index,
+            ghostRow,
+            rowIndex,
           },
         };
       });

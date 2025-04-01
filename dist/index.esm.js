@@ -2456,8 +2456,12 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
         start: start,
         end: end
       });
+      // don't allow moving between tracks
+      var isBlocked = currentActionInfo.action.blockCrossMovable;
+      var ghostRow = isBlocked ? currentActionInfo.row : currentMouseRow.row;
+      var rowIndex = isBlocked ? currentActionInfo.rowIndex : currentMouseRow.index;
       // Add the action to the potential new row
-      var row = addActionToRow(removeActionFromRow(editorData[currentMouseRow.index], newAction.id), newAction);
+      var row = addActionToRow(removeActionFromRow(editorData[rowIndex], newAction.id), newAction);
       var data = {
         action: currentActionInfo.action,
         row: row,
@@ -2475,8 +2479,8 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
                 start: start,
                 end: end
               }),
-              ghostRow: currentMouseRow.row,
-              rowIndex: currentMouseRow.index
+              ghostRow: ghostRow,
+              rowIndex: rowIndex
             })
           });
         }
@@ -2492,8 +2496,8 @@ var EditArea = /*#__PURE__*/React.forwardRef(function (props, ref) {
             start: start,
             end: end
           }),
-          ghostRow: currentMouseRow.row,
-          rowIndex: currentMouseRow.index
+          ghostRow: ghostRow,
+          rowIndex: rowIndex
         })
       });
     });
